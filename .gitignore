@@ -13,3 +13,14 @@ docs/Template_*.docx
 # Unlicensed datasets (no redistribution right; ekaputra also has real sender phone numbers) - kept locally only, never used for training
 data/raw/indo/ekaputra_sms-labeled-all.csv
 data/raw/indo/spacegoalex/
+# CC BY 4.0 but contains phone numbers and social-media usernames; download instructions in its SOURCE.md
+data/raw/indo/judol_0xrafie/dataset.csv
+# LibreOffice lock files
+.~lock.*
+docs/.~*
+# Group identity (names/NIM) stays local; generated documents contain it, so they are not published either
+docs/identitas_kelompok.py
+docs/Proposal_PhishGuard.docx
+docs/Proposal_PhishGuard_preview.pdf
+docs/Laporan_PhishGuard.docx
+docs/Laporan_PhishGuard_preview.pdf

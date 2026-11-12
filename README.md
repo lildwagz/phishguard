@@ -9,8 +9,8 @@ Aplikasi deteksi SMS/Email phishing. Mata kuliah PBL (Project-Based Learning): k
 - [ ] **Belum diisi**: nomor/nama kelompok, kode kelas, nama+NIM anggota tim — isi manual di docx di atas (sengaja dikosongkan, bukan data milik asisten).
 - [x] Dataset siap (2026-11-12): `data/processed/` — 6.939 SMS (EN Mendeley smishing + ID Rahmi & Wibisono), phishing ~12%, split train/test 80/20. Detail, lisensi & sitasi: `data/README.md`; rencana: `plans/2026-11-12-dataset.md`.
 - [x] Model (2026-11-12, retrain #2 dengan data ID 2021+): TF-IDF (kata + karakter) + Logistic Regression → `model/phishguard.joblib`. Test: **akurasi 97,8%**, F1 phishing 0,921 (EN 0,901 · ID 0,944). Detail: `model/metrics.json`.
-- [x] REST API FastAPI (`api/`): `GET /health`, `POST /v1/predict`. 36 tes pytest lulus (termasuk aturan & keamanan) (FR-01, FR-02, NFR-02 teks tidak di-log, NFR-01 latency). Latency HTTP di Docker p95 ≈ 6 ms.
-- [x] Lapisan aturan (`api/app/rules.py`): .apk, minta kode OTP, kerja dibayar per like/tugas, domain tiruan brand. 0 false alarm di 6.089 pesan aman; challenge v2 8/12 → 11/12 (optimis, lihat `plans/2026-11-12-lapisan-aturan.md`). Respon API punya `reasons`, ditampilkan di app.
+- [x] REST API FastAPI (`api/`): `GET /health`, `POST /v1/predict`. 46 tes pytest lulus (termasuk aturan, judol & keamanan) (FR-01, FR-02, NFR-02 teks tidak di-log, NFR-01 latency). Latency HTTP di Docker p95 ≈ 6 ms.
+- [x] Lapisan aturan (`api/app/rules.py`): .apk, minta kode OTP, kerja dibayar per like/tugas, domain tiruan brand, situs/promo judi online (2026-11-12). 0 false alarm di 6.089 pesan aman; challenge v2 8/12 → 11/12 (optimis, lihat `plans/2026-11-12-lapisan-aturan.md`). Respon API punya `reasons`, ditampilkan di app.
 - [x] Docker: `docker compose up -d --build` → API :8000 + web UI :8080.
 - [x] Aplikasi Flutter (`mobile/`): input, validasi kosong, kartu hasil + confidence, riwayat lokal, pengaturan URL server. `flutter analyze` bersih, 9 widget test lulus, diuji end-to-end di Chrome.
 - [~] Modus penipuan ID terbaru: ditambah 69 teks penipuan 2022+ (kutipan berita) + bopbi 2021. Challenge v1 1/5 → 5/5; challenge **v2 (unseen) 8/12** — masih lolos kurir/foto-paket APK & lowongan part-time, 1 false alarm notifikasi BCA asli. Perlu SMS asli dari anggota kelompok → `data/raw/indo/kelompok/`. Detail: `plans/2026-11-12-data-indonesia-terbaru.md`.
@@ -22,7 +22,13 @@ Aplikasi deteksi SMS/Email phishing. Mata kuliah PBL (Project-Based Learning): k
 - [x] Full testing semua lapisan lulus — `plans/2026-11-12-full-testing.md`.
 - [x] Draf Proposal (2026-11-12): `docs/Proposal_PhishGuard.docx` — tinggal isi data identitas kelompok (lihat `plans/2026-11-12-proposal.md`).
 - [x] Repository Git (2026-11-12): https://github.com/lildwagz/phishguard (publik). Tidak di-push: `materi-kuliah/`, template kosong UBSI, dataset tanpa lisensi (ekaputra, spacegoalex) — lihat `.gitignore`. Commit atas nama `lildwagz` saja (tanpa atribusi AI).
-- [ ] Belum: Laporan akhir, deployment server/HTTPS.
+- [~] Draf Laporan (2026-11-12): `docs/Laporan_PhishGuard.docx` (43 hlm, salinan template; sumber `docs/laporan_src/`). Bagian yang belum ada buktinya ditulis jujur sebagai belum dilakukan: live app, stress test Locust, uji pengguna di luar kelompok, tag release, request ID. Lihat `plans/2026-11-12-laporan.md`.
+- [x] **Deteksi judi online** (2026-11-12): dataset judol CC BY 4.0 (Ekaputra 2026, 3.861 baris setelah disaring) → **detektor judol terpisah** di bundle model (test judol P 0,976 R 0,933; 0 alarm di 6.089 SMS aman) + aturan `online_gambling` + TLD baru. Model utama sengaja tidak dicampur data judol (menurunkan challenge v1 9/9 → 5/9); 0 label SMS lama berubah. Pesan THR judol dari user kini PHISHING 90%. Lihat `plans/2026-11-12-dataset-judol.md`.
+- [x] **Deployment publik** (2026-11-12): nginx di container `web` sekarang meneruskan `/v1/` + `/health` ke API (satu origin, `mobile/nginx.conf`); web memakai origin halaman sebagai alamat API; `RATE_LIMIT_PER_MIN=300` per IP pengunjung (Funnel meneruskan IP asli; API hanya percaya XFF dari nginx/ts-web). 46 pytest + 14 tes Flutter lulus, uji Chrome di :8080 lulus. **Live: https://phishguard.taile0ea7c.ts.net** lewat sidecar Tailscale `ts-web` (profile `public`; nyala `docker compose --profile public up -d`, mati `docker compose stop ts-web`). Diuji dari jaringan luar 2026-11-12. Lihat `plans/2026-11-12-deployment-tailscale-funnel.md`.
+- [ ] Belum: stress test Locust (P13), tag release.
+- [ ] **False negative ditemukan** (2026-11-12, dari app live): teks obfuskasi (`k0dee`, `pkai`, `peener1ma`) +
+  domain TLD `.mom` + pola "klaim hadiah/THR" lolos jadi "aman" (confidence 0,75). Akar masalah & opsi perbaikan:
+  `plans/2026-11-12-false-negative-obfuskasi.md`.
 
 ## Rencana arsitektur (dari checkpoint 1)
 
@@ -90,9 +96,10 @@ Android: build APK dulu **tanpa** emulator menyala (RAM 7 GB → OOM), lalu `~/A
 3. ~~Revisi NFR-03~~ — selesai (akurasi ≥ 85% **dan** F1 phishing ≥ 0,85). Kalau Checkpoint/Proposal sudah dikumpulkan dengan NFR-03 lama, sebutkan revisi ini di Proposal/Laporan.
 4. Isi Proposal (`docs/Template_Proposal_…docx`, BAB I–V) — metrik, sitasi dataset, dan arsitektur sudah tersedia.
 5. Deployment ke server/cloud + monitoring, lalu Laporan akhir (`docs/Template_Laporan_…docx`).
-   Hardening API sudah dikerjakan (`plans/2026-11-12-keamanan-api.md`). Saat deploy di belakang reverse proxy
-   (Tailscale Funnel dkk.): set `FORWARDED_ALLOW_IPS` ke IP proxy (kalau tidak, semua klien terlihat satu IP dan
-   berbagi kuota 429) dan tambahkan origin web publik ke `CORS_ORIGINS` di `docker-compose.yml`.
+   Hardening API sudah dikerjakan (`plans/2026-11-12-keamanan-api.md`). Rencana akses publik: Tailscale Funnel
+   dari laptop + nginx satu origin (`plans/2026-11-12-deployment-tailscale-funnel.md`, belum dikerjakan).
+   Funnel meneruskan IP pengunjung asli (temuan awal "kuota bersama" keliru, lihat plan keamanan bagian "Koreksi");
+   API memercayai `X-Forwarded-For` hanya dari 172.28.0.10 (nginx) dan 172.28.0.11 (ts-web).
    Uji beban: naikkan `RATE_LIMIT_PER_MIN` dulu, kalau tidak hasilnya didominasi 429.
 6. ~~Fitur "Scan via Text Selection"~~ — selesai, lihat status di atas.
 

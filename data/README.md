@@ -11,6 +11,7 @@
 | `raw/indo/bopbi/` — bopbi/indonesia-sms-spam-dataset (SMS asli, 2021) | ID | prize, loan, non-provider-promo → **phishing** · premium-sms → **aman** · evil-service dibuang | CC0 1.0 |
 | `raw/indo/curated_2022plus/*.jsonl` — teks SMS/WA/posting penipuan **dikutip verbatim** dari berita & peringatan resmi 2022–2026 (kompas, liputan6, detik, tirto, turnbackhoax, bca.co.id, dll.) | ID | sudah berlabel; tiap baris punya `source_url` | kutipan untuk keperluan akademik, sumber dicantumkan per baris |
 | `raw/indo/kelompok/*.csv` — SMS asli dari anggota kelompok (belum ada isinya) | ID | `text,label,modus` | data sendiri |
+| `raw/indo/judol_0xrafie/dataset.csv` — Ekaputra (2026), caption Facebook/TikTok/X, anotasi manual (ITS) | ID | 1.0 promosi judi online → **phishing** · 0.0 bukan → **aman** | CC BY 4.0 (file mentah tidak di repo, lihat `SOURCE.md`) |
 
 Catatan `curated_2022plus` (dikumpulkan 2026-11-12 oleh 4 agent riset paralel, lalu saya periksa):
 69 penipuan (bank 25, lain-lain 35, kurir/APK/tilang 9) + 51 notifikasi resmi (40 ternyata sudah ada di Rahmi → terbuang saat dedup; 11 template OTP/pesanan WhatsApp Business dengan placeholder `{{1}}` diisi `482913`).
@@ -18,8 +19,15 @@ Sekitar 28 teks penipuan berasal dari **posting Facebook** (bukan SMS/WA) dan 7 
 Teks dinormalisasi NFKC (huruf "math bold" → huruf biasa).
 
 Spam/promo dimasukkan ke **aman**: PhishGuard menandai penipuan, bukan iklan.
+Pengecualian (2026-11-12): **promosi judi online → phishing**. Judol ilegal di Indonesia dan situsnya menjadi pintu penipuan; promo dagang resmi tetap aman.
 
-**Hasil (`processed/`)**: 7.067 pesan unik (34 teks duplikat dengan label bertentangan dibuang), split stratified 80/20 per (label, sumber), seed 42.
+Catatan `judol_0xrafie` (lihat `plans/2026-11-12-dataset-judol.md`): dari 5.028 baris, dibuang baris bernomor telepon, tautan `wa.me/<nomor>`, atau ID profil Facebook (privasi), posting taruhan berbahasa Turki,
+teks mayoritas non-Latin, > 2.000 karakter (batas API), dan < 3 kata setelah link/#tag/@mention dihapus; `@username` diganti `@user`.
+Hasil: 3.861 baris unik (1.499 judol, 2.362 bukan judol). Data ini **tidak** dipakai melatih model utama (mencampurnya menurunkan recall
+smishing Indonesia: challenge v1 9/9 → 5/9), tetapi melatih **detektor judol** terpisah di bundle model yang sama.
+Split sumber ini memakai RNG sendiri, sehingga train/test sumber lama tetap identik (5.654/1.413, sudah diverifikasi).
+
+**Hasil (`processed/`)**: 10.928 baris unik sejak 2026-11-12 (7.067 SMS + 3.861 judol). Sebelum data judol: 7.067 pesan unik (34 teks duplikat dengan label bertentangan dibuang), split stratified 80/20 per (label, sumber), seed 42.
 
 _Tabel di bawah = versi pertama (sebelum data 2021+ ditambah); angka terbaru per sumber ada di output `prepare_dataset.py`._
 
@@ -51,6 +59,7 @@ Catatan: ~145 baris dari sumber Mendeley sudah berisi karakter rusak `�` sejak
 - Rahmi, F., & Wibisono, Y. (2016). *Aplikasi SMS Spam Filtering pada Android menggunakan Naive Bayes* [Unpublished manuscript]. Dataset v1.0 (2018): https://yudiwbs.wordpress.com/2018/08/05/dataset-klasifikasi-bahasa-indonesia-sms-spam-klasifikasi-teks-dengan-scikit-learn/
   - Sitasi & lisensi (CC BY-SA 4.0) diambil dari `penjelasan.txt` di arsip v1.0 (Agt 2018) pembuat dataset (https://bit.ly/yw_sms_spam_indonesia), disimpan tanpa diubah di `raw/indo/rahmi2016/penjelasan.txt`.
 - bopbi. (2021). *Indonesia SMS Spam Dataset* [Data set]. GitHub. https://github.com/bopbi/indonesia-sms-spam-dataset (CC0 1.0)
+- Ekaputra, D. R. (2026). *Indonesian Online Gambling Promotion Multimodal Dataset* [Data set]. Hugging Face. https://huggingface.co/datasets/0xRafie/indonesian-gambling-multimodal-dataset (CC BY 4.0)
 - Almeida, T. A., & Hidalgo, J. M. G. (2011). *SMS Spam Collection* [Data set]. UCI Machine Learning Repository. https://doi.org/10.24432/C5CC84
 
 Checksum: `Dataset_5971.zip` sha256 `9bbf3188…233cc3` (cocok dengan Mendeley); `dataset_sms_spam_v1.csv` sha256 `206e8cb1…d717c` (cocok dengan yang dicatat repo mirror).

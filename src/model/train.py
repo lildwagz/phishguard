@@ -3,6 +3,12 @@
 Run from the project root:  .venv/bin/python src/model/train.py
 Compares TF-IDF + MultinomialNB against TF-IDF + LogisticRegression (5-fold CV F1 on train),
 keeps the better one, then reports held-out test metrics overall and per language.
+
+Two models are saved in one bundle:
+- main: phishing vs aman, trained on the SMS sources only (gambling social-media posts are left out because
+  mixing them in lowered recall on Indonesian SMS scams; see plans/2026-11-12-dataset-judol.md);
+- judol: online-gambling promotion detector, trained on all rows with target "judol promotion or not".
+The API flags a message as phishing when the main model, the judol detector or a rule says so.
 """
 import json
 import time
@@ -10,6 +16,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import joblib
+import numpy as np
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
@@ -22,6 +29,8 @@ ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "data" / "processed"
 OUT = ROOT / "model"
 POS = "phishing"
+JUDOL_SOURCES = {"judol_0xrafie"}
+JUDOL_THRESHOLD = 0.5  # default probability cut-off, not tuned on the test set
 
 
 def features():
@@ -55,8 +64,10 @@ def scores(y_true, y_pred):
 
 
 def main():
-    train = pd.read_csv(DATA / "train.csv")
-    test = pd.read_csv(DATA / "test.csv")
+    train_all = pd.read_csv(DATA / "train.csv")
+    test_all = pd.read_csv(DATA / "test.csv")
+    is_judol_src = lambda df: df.source.isin(JUDOL_SOURCES)  # noqa: E731
+    train, test = train_all[~is_judol_src(train_all)], test_all[~is_judol_src(test_all)]
 
     cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
     cv_f1 = {}
@@ -103,8 +114,37 @@ def main():
             "false_alarm_aman": ch.note[(ch.label != POS) & (ch_pred == POS)].tolist(),
         }
 
+    # --- judol detector ---------------------------------------------------------------------------
+    target = lambda df: is_judol_src(df) & (df.label == POS)  # noqa: E731
+    judol = Pipeline([("tfidf", features()),
+                      ("clf", LogisticRegression(C=10, class_weight="balanced", max_iter=2000))])
+    judol.fit(train_all.text, target(train_all))
+    jt = test_all[is_judol_src(test_all)]
+    j_hit = judol.predict_proba(jt.text)[:, 1] >= JUDOL_THRESHOLD
+    sms_aman = pd.concat([train, test])
+    sms_aman = sms_aman[sms_aman.label == "aman"]
+    # whole system = main model OR judol detector (rules not included here; they are tested in api/tests)
+    sys_pred = lambda df: np.where((model.predict(df.text) == POS)  # noqa: E731
+                                   | (judol.predict_proba(df.text)[:, 1] >= JUDOL_THRESHOLD), POS, "aman")
+    metrics["judol_detector"] = {
+        "threshold": JUDOL_THRESHOLD,
+        "train_rows": int(len(train_all)), "train_positive": int(target(train_all).sum()),
+        "test_judol_source": scores(np.where(target(jt), POS, "aman"), np.where(j_hit, POS, "aman")),
+        "false_alarms_on_all_legit_sms (train+test)": int((judol.predict_proba(sms_aman.text)[:, 1] >= JUDOL_THRESHOLD).sum()),
+        "legit_sms_checked": int(len(sms_aman)),
+    }
+    metrics["system_main_or_judol"] = {
+        "test_sms (same messages as test_overall)": scores(test.label, sys_pred(test)),
+        "test_judol_social_posts": scores(jt.label, sys_pred(jt)),
+        "note": "judol_social_posts are Facebook/TikTok/X captions; most false alarms there come from the main SMS model",
+    }
+    for path in sorted((ROOT / "data" / "challenge").glob("challenge_*.csv")):
+        ch = pd.read_csv(path)
+        metrics["system_main_or_judol"][path.stem] = scores(ch.label, sys_pred(ch))
+
     OUT.mkdir(exist_ok=True)
-    joblib.dump({"pipeline": model, "version": metrics["version"], "name": best}, OUT / "phishguard.joblib")
+    joblib.dump({"pipeline": model, "version": metrics["version"], "name": best,
+                 "judol": {"pipeline": judol, "threshold": JUDOL_THRESHOLD}}, OUT / "phishguard.joblib")
     (OUT / "metrics.json").write_text(json.dumps(metrics, indent=2))
     print(json.dumps(metrics, indent=2))
 

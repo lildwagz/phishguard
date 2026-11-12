@@ -1,0 +1,179 @@
+import copy, re, sys
+import docx
+from docx.shared import Pt, Cm
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.oxml.ns import qn
+sys.path.insert(0, '.')
+from content import *
+
+SRC = '/home/zam/projects/MyProject/PhishGuard/docs/Template_Laporan_Project_Kecerdasan_Buatan_UBSI_2026.docx'
+OUT = '/home/zam/projects/MyProject/PhishGuard/docs/Laporan_PhishGuard.docx'
+d = docx.Document(SRC)
+P = d.paragraphs
+BODY = next(p for p in P if p.text.startswith('Laporan project mata kuliah'))
+BODY_PPR = copy.deepcopy(BODY._p.pPr) if BODY._p.pPr is not None else None
+
+
+def new_para_before(anchor, text='', kind='p'):
+    p = anchor.insert_paragraph_before()
+    if kind == 'b':
+        p.style = d.styles['List Bullet']
+    elif BODY_PPR is not None:
+        p._p.insert(0, copy.deepcopy(BODY_PPR))
+    if kind == 'p':
+        p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        p.paragraph_format.first_line_indent = Cm(1.0)
+    if kind == 'b':
+        p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+    if kind == 'ref':
+        p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        p.paragraph_format.left_indent = Cm(1.27)
+        p.paragraph_format.first_line_indent = Cm(-1.27)
+    if kind == 'cap':
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    if kind == 'code':
+        p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        p.paragraph_format.first_line_indent = Cm(0)
+        p.paragraph_format.left_indent = Cm(0.5)
+        p.paragraph_format.space_before = Pt(0)
+        p.paragraph_format.space_after = Pt(0)
+        p.paragraph_format.line_spacing = 1.0
+    if text:
+        r = p.add_run(text)
+        if kind == 'code':
+            r.font.name = 'Courier New'; r.font.size = Pt(8.5)
+            r._r.get_or_add_rPr().get_or_add_rFonts().set(qn('w:hAnsi'), 'Courier New')
+        if kind == 'cap':
+            r.italic = True; r.font.size = Pt(10)
+    return p
+
+
+def fill_section(heading_text, blocks):
+    idx = next(i for i, p in enumerate(d.paragraphs) if p.text.strip() == heading_text and p.style.name.startswith('Heading'))
+    h = d.paragraphs[idx]
+    nxt = d.paragraphs[idx + 1] if idx + 1 < len(d.paragraphs) else None
+    petunjuk = nxt if nxt is not None and nxt.text.strip().startswith('Petunjuk pengisian') else None
+    if petunjuk is not None:
+        anchor = petunjuk
+    else:
+        # insert right after the heading: anchor on the element that follows the heading
+        anchor = docx.text.paragraph.Paragraph(h._p.getnext(), h._parent) if h._p.getnext() is not None and h._p.getnext().tag == qn('w:p') else None
+        if anchor is None:  # heading followed by a table or nothing: put a temp paragraph after heading
+            tmp = copy.deepcopy(h._p); h._p.addnext(tmp)
+            anchor = docx.text.paragraph.Paragraph(tmp, h._parent)
+            for r in list(anchor.runs): r._r.getparent().remove(r._r)
+            anchor._p.getparent().remove(anchor._p) if False else None
+            created_tmp = True
+        else:
+            created_tmp = False
+    for b in blocks:
+        kind = b[0]
+        if kind == 'img':
+            p = new_para_before(anchor, '', 'cap')
+            p.add_run().add_picture(b[1], width=Cm(b[2]))
+        elif kind == 'code':
+            for line in b[1].split('\n'):
+                new_para_before(anchor, line, 'code')
+        else:
+            new_para_before(anchor, b[1], kind)
+    if petunjuk is not None:
+        petunjuk._p.getparent().remove(petunjuk._p)
+    elif created_tmp:
+        anchor._p.getparent().remove(anchor._p)
+
+
+def remove_petunjuk_after(heading_text):
+    idx = next(i for i, p in enumerate(d.paragraphs) if p.text.strip() == heading_text and p.style.name.startswith('Heading'))
+    nxt = d.paragraphs[idx + 1]
+    if nxt.text.strip().startswith('Petunjuk pengisian'):
+        nxt._p.getparent().remove(nxt._p)
+
+
+def set_cell(cell, text):
+    paras = cell.paragraphs
+    p = paras[0]
+    runs = p.runs
+    if runs:
+        runs[0].text = text
+        for r in runs[1:]: r._r.getparent().remove(r._r)
+    else:
+        p.add_run(text)
+    for extra in paras[1:]:
+        extra._p.getparent().remove(extra._p)
+
+
+def fill_table(t, rows, start=1):
+    need = start + len(rows)
+    while len(t.rows) < need:
+        t._tbl.append(copy.deepcopy(t.rows[-1]._tr))
+    while len(t.rows) > need:
+        t._tbl.remove(t.rows[-1]._tr)
+    for i, vals in enumerate(rows):
+        for j, v in enumerate(vals):
+            set_cell(t.rows[start + i].cells[j], v)
+
+
+# ---- cover & title placeholders
+for p in d.paragraphs:
+    for r in p.runs:
+        if '[JUDUL PROJECT APLIKASI AI]' in r.text:
+            r.text = r.text.replace('[JUDUL PROJECT APLIKASI AI]', JUDUL.upper() if p.alignment == WD_ALIGN_PARAGRAPH.CENTER else JUDUL)
+
+# ---- pengusul (cover) + tanda tangan ketua
+cover = [p for p in d.paragraphs if p.text.startswith('[NIM] [Nama Mahasiswa] (')]
+people = [(KETUA, 'Ketua')] + [(a, f'Anggota {i+1}') for i, a in enumerate(ANGGOTA)]
+while len(cover) < len(people):  # template has 4 slots; P01 allows 1 ketua + 4 anggota
+    new = copy.deepcopy(cover[-1]._p); cover[-1]._p.addnext(new)
+    cover.append(docx.text.paragraph.Paragraph(new, cover[-1]._parent))
+for par, ((nim, nama), role) in zip(cover, people):
+    par.runs[0].text = f'{nim} {nama} ({role})'
+    for r in par.runs[1:]: r._r.getparent().remove(r._r)
+for p in d.tables[2].rows[1].cells[0].paragraphs:
+    for r in p.runs:
+        r.text = r.text.replace('[Nama Mahasiswa]', KETUA[1]).replace('[NIM]', KETUA[0])
+
+# ---- header text of the filled copy
+for sec in d.sections:
+    for hdr in (sec.header, sec.first_page_header, sec.even_page_header):
+        for p in hdr.paragraphs:
+            for r in p.runs:
+                if 'Template Laporan Project' in r.text:
+                    r.text = r.text.replace('Template Laporan Project', 'Laporan Project')
+
+# ---- tables
+T = d.tables
+API_TBL = T[4]._tbl
+fill_table(T[0], IDENTITAS, start=0)
+fill_table(T[3], RINGKASAN_META, start=0)
+fill_table(T[5], TESTS)
+fill_table(T[6], LAMPIRAN_ROWS)
+for i, ok in enumerate(CHECKLIST):
+    set_cell(T[7].rows[1 + i].cells[0], '[x]' if ok else '[ ]')
+ENDPOINTS = [
+    ("POST", "/v1/predict", "{text: string, wajib, 1 sampai 2.000 karakter, tidak hanya spasi}", "{label, confidence, model_version, latency_ms, reasons[]}", "200; 413 body > 32 KB; 422 validasi gagal; 429 > 60 request/menit per IP per worker (Retry-After); 500"),
+    ("GET", "/health", "-", "{status: \"ok\", model_version}", "200; bila model gagal dimuat server tidak start dan HEALTHCHECK gagal"),
+    ("GET", "/docs", "-", "Dokumentasi OpenAPI interaktif", "200"),
+]
+fill_table(T[4], ENDPOINTS)
+
+def set_widths(t, cms):
+    for row in t.rows:
+        for c, w in zip(row.cells, cms):
+            c.width = Cm(w)
+    for gc, w in zip(t._tbl.tblGrid.findall(qn('w:gridCol')), cms):
+        gc.set(qn('w:w'), str(int(w * 567)))
+set_widths(T[4], (1.9, 2.3, 2.9, 3.0, 3.7))   # same total width as the template (13.8 cm)
+set_widths(T[6], (1.6, 7.2, 5.0))
+
+# ---- sections
+remove_petunjuk_after('DAFTAR ISI')
+S['DAFTAR PUSTAKA'] = sorted(S['DAFTAR PUSTAKA'], key=lambda b: b[1].lower())
+for heading, blocks in S.items():
+    fill_section(heading, blocks)
+for h in ('5.2 Hasil Unit dan Integration Testing', 'LAMPIRAN', 'CHECKLIST PENYERAHAN AKHIR'):
+    try: remove_petunjuk_after(h)
+    except Exception: pass
+
+d.save(OUT)
+left = [p.text[:60] for p in d.paragraphs if 'Petunjuk pengisian' in p.text]
+print('saved', OUT, '| petunjuk left:', left)

@@ -119,6 +119,19 @@ for p in d.paragraphs:
         if '[JUDUL PROJECT APLIKASI AI]' in r.text:
             r.text = r.text.replace('[JUDUL PROJECT APLIKASI AI]', JUDUL.upper() if p.alignment == WD_ALIGN_PARAGRAPH.CENTER else JUDUL)
 
+# ---- pengusul (cover) + tanda tangan ketua
+cover = [p for p in d.paragraphs if p.text.startswith('[NIM] [Nama Mahasiswa] (')]
+people = [(KETUA, 'Ketua')] + [(a, f'Anggota {i+1}') for i, a in enumerate(ANGGOTA)]
+while len(cover) < len(people):  # template has 4 slots; P01 allows 1 ketua + 4 anggota
+    new = copy.deepcopy(cover[-1]._p); cover[-1]._p.addnext(new)
+    cover.append(docx.text.paragraph.Paragraph(new, cover[-1]._parent))
+for par, ((nim, nama), role) in zip(cover, people):
+    par.runs[0].text = f'{nim} {nama} ({role})'
+    for r in par.runs[1:]: r._r.getparent().remove(r._r)
+for p in d.tables[2].rows[1].cells[0].paragraphs:
+    for r in p.runs:
+        r.text = r.text.replace('[Nama Mahasiswa]', KETUA[1]).replace('[NIM]', KETUA[0])
+
 # ---- header text of the filled copy
 for sec in d.sections:
     for hdr in (sec.header, sec.first_page_header, sec.even_page_header):

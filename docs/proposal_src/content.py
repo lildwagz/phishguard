@@ -250,12 +250,19 @@ TESTS = [
     ("T-08", "Keamanan", "150 request beruntun dari satu IP; body 40 KB biasa dan chunked; preflight CORS dari origin lain", "429 setelah batas dengan Retry-After; 413; origin lain tanpa header Access-Control-Allow-Origin (terukur: 120 x 200 lalu 30 x 429, 413, 400)", "api/tests/test_security.py + uji live Docker"),
 ]
 
+# Pembagian peran anggota belum ditentukan user.
+# Nama dan NIM tidak ada di repo publik: diambil dari docs/identitas_kelompok.py (lokal, .gitignore).
+# Tanpa file itu dokumen dibuat dengan placeholder.
+import os as _os, sys as _sys
+_sys.path.insert(0, _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), ".."))
+try:
+    from identitas_kelompok import KETUA, ANGGOTA
+except ImportError:
+    KETUA = ("[NIM]", "[Nama Ketua]")
+    ANGGOTA = [("[NIM]", f"[Nama Anggota {i}]") for i in range(1, 5)]
 PERAN = [
-    ("[Ketua]", "Project lead/backend", "Koordinasi, REST API FastAPI, lapisan aturan, integrasi", "[Commit/log]"),
-    ("[Anggota 1]", "AI/model", "Pengumpulan dan pelabelan data, pelatihan dan evaluasi model", "[Commit/log]"),
-    ("[Anggota 2]", "Frontend/UI", "Aplikasi Flutter (Android dan web), popup scan, riwayat", "[Commit/log]"),
-    ("[Anggota 3]", "Testing/deployment", "Pengujian, Docker, deployment cloud, monitoring", "[Commit/log]"),
-]
+    (f"{KETUA[1]} / {KETUA[0]}", "Ketua, project lead", "Koordinasi, integrasi, dan [tugas utama]", "[Commit/log]"),
+] + [(f"{n} / {nim}", "[Peran]", "[Tugas utama]", "[Commit/log]") for nim, n in ANGGOTA]
 
 # Jadwal mengikuti topik Pertemuan 1-16 pada materi kuliah (788-P01 s.d. P16).
 JADWAL = [

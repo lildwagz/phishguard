@@ -7,10 +7,16 @@ services:
     ports:
       - "8000:8000"
     environment:
-      # Hardening (plans/2026-11-12-keamanan-api.md). Add the public web origin here when deployed.
+      # Hardening (plans/2026-11-12-keamanan-api.md). The web UI calls the API on its own origin via
+      # nginx (mobile/nginx.conf), so the public Funnel URL needs no CORS entry.
       CORS_ORIGINS: "http://localhost:8080,http://127.0.0.1:8080"
-      RATE_LIMIT_PER_MIN: "60"
+      # Per visitor IP per worker (2 workers => max ~600/min per IP).
+      RATE_LIMIT_PER_MIN: "${RATE_LIMIT_PER_MIN:-300}"
       MAX_BODY_BYTES: "32768"
+      # Trust X-Forwarded-For only from nginx (`web`, 172.28.0.10) and the sidecar (172.28.0.11); nginx appends the address it got
+      # from the ts-web sidecar). Tailscale Funnel puts the real visitor IP there and drops spoofed values;
+      # uvicorn reads the list right-to-left and takes the first untrusted address, so rate limiting is per visitor.
+      FORWARDED_ALLOW_IPS: "172.28.0.10,172.28.0.11"
     restart: unless-stopped
 
   # Flutter web UI at http://localhost:8080 (build first: cd mobile && flutter build web --release)
@@ -21,6 +27,42 @@ services:
     image: phishguard-web:latest
     ports:
       - "8080:80"
+    networks:
+      default:
+        ipv4_address: 172.28.0.10
     depends_on:
       - api
     restart: unless-stopped
+
+  # Public access via a Tailscale sidecar (its own tailnet node "phishguard") with Funnel on.
+  # Only started on demand:  docker compose --profile public up -d   ·  stop: docker compose stop ts-web
+  # Needs TS_AUTHKEY in .env (gitignored). See plans/2026-11-12-deployment-tailscale-funnel.md.
+  ts-web:
+    image: tailscale/tailscale:v1.104.4
+    profiles: ["public"]
+    hostname: phishguard
+    networks:
+      default:
+        ipv4_address: 172.28.0.11
+    environment:
+      TS_AUTHKEY: "${TS_AUTHKEY:-}"
+      TS_HOSTNAME: phishguard
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_SERVE_CONFIG: /config/serve-web.json
+      TS_USERSPACE: "true"
+      TS_AUTH_ONCE: "true"
+    volumes:
+      - ts-web-state:/var/lib/tailscale
+      - ./deploy/tailscale/serve-web.json:/config/serve-web.json:ro
+    depends_on:
+      - web
+    restart: unless-stopped
+
+volumes:
+  ts-web-state:
+
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 172.28.0.0/24

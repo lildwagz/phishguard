@@ -40,7 +40,9 @@ JOB = re.compile(r"\b(kerja|pekerjaan|paruh waktu|part[\s-]?time|freelance|pengh
 # --- 4. Look-alike domains that borrow a brand name -------------------------------------------
 # Only real-looking TLDs, so "dari BRI.Klaim sekarang" (missing space after a full stop) is not a domain.
 TLDS = ("com|id|net|org|xyz|online|site|info|co|tk|cc|top|buzz|link|click|me|io|app|shop|store|vip|live|life|web"
-        "|ly|gl|ml|ga|cf|gq|icu|cyou|sbs|pw|club|biz|asia|my|cloud|today|win|work")
+        "|ly|gl|ml|ga|cf|gq|icu|cyou|sbs|pw|club|biz|asia|my|cloud|today|win|work"
+        # seen in online-gambling posts (data/raw/indo/judol_0xrafie) and the user-reported akaligabandar.mom
+        "|mom|lat|love|ink|lol|guru|bet|space|bio|group")
 DOMAIN = re.compile(rf"\b(?:https?://)?((?:[a-z0-9-]+\.)+(?:{TLDS})(?:\.[a-z]{{2}})?)(?![a-z0-9-])", re.I)
 BRANDS = {
     "bca", "bri", "brimo", "bni", "mandiri", "livin", "btn", "bsi", "cimb", "danamon", "jenius", "ocbc",
@@ -56,6 +58,36 @@ OFFICIAL_SUFFIXES = (
     "tsel.me", "indosatooredoo.com", "indosat.com", "im3.id", "xl.co.id", "tri.co.id", "grab.co", "ojk.go.id", "pajak.go.id", "kemensos.go.id", "whatsapp.com", "wa.me",
     ".go.id",  # any Indonesian government domain
 )
+
+
+# --- 5. Online gambling (judol) promotion --------------------------------------------------------
+# (a) a domain whose name uses gambling vocabulary, or (b) at least two judol promo terms plus a link/sign-up cue.
+# Terms are matched on a normalised copy (k0dee -> kode, GAC0R -> gacor); the text itself is never changed.
+# Checked: 0 hits on all 6,089 legit SMS and on 2,364 non-gambling posts (news, anti-judol campaigns).
+LEET = str.maketrans({"0": "o", "1": "i", "3": "e", "4": "a", "5": "s", "7": "t", "@": "a", "$": "s"})
+GAMBLING_DOMAIN_TERM = re.compile(r"bandar|gacor|togel|maxwin|judi|casino|kasino|jackpot|scatter|slot")
+GAMBLING_PROMO = re.compile(
+    r"\b(gacor|maxwin|scater|scatter|togel|rtp|depo|deposit|wd|withdraw|slot|jackpot|jp|bandar|olympus|mahjong"
+    r"|zeus|pragmatic|sweet bonanza|spin|cuan|freebet|bonus new member|situs)\b")
+SIGNUP_CUE = re.compile(r"https?://|\bwww\.|\blink\b|\bdaftar\b|\bklik\b|\bbio\b")
+
+
+def normalize_obfuscation(text: str) -> str:
+    """Lower-case, undo digit-for-letter swaps and squeeze repeated letters (for matching only)."""
+    return re.sub(r"([a-z])\1+", r"\1", text.lower().translate(LEET))
+
+
+def _gambling_domain(text: str) -> str | None:
+    for m in DOMAIN.finditer(text):
+        name = m.group(1).lower().rsplit(".", 1)[0]  # without the TLD
+        if GAMBLING_DOMAIN_TERM.search(name):
+            return m.group(1).lower()
+    return None
+
+
+def _gambling_promo(text: str) -> bool:
+    norm = normalize_obfuscation(text)
+    return len(set(GAMBLING_PROMO.findall(norm))) >= 2 and bool(SIGNUP_CUE.search(norm) or DOMAIN.search(text))
 
 
 def _share_code_request(text: str) -> bool:
@@ -86,4 +118,8 @@ def check(text: str) -> list[RuleHit]:
         hits.append(RuleHit("paid_task_job", "Tawaran kerja dibayar untuk like/follow/tugas online", 0.85))
     if domain := _lookalike_domain(text):
         hits.append(RuleHit("lookalike_domain", f"Tautan '{domain}' memakai nama brand tapi bukan domain resmi", 0.85))
+    if domain := _gambling_domain(text):
+        hits.append(RuleHit("online_gambling", f"Tautan '{domain}' memakai kosakata judi online (situs judol)", 0.9))
+    elif _gambling_promo(text):
+        hits.append(RuleHit("online_gambling", "Promosi judi online (slot/gacor/maxwin) dengan tautan atau ajakan daftar", 0.9))
     return hits

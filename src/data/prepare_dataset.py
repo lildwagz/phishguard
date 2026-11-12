@@ -1,7 +1,7 @@
 """Build the binary PhishGuard SMS dataset (phishing vs aman) from the raw public sources.
 
 Run from the project root:  python3 src/data/prepare_dataset.py
-Inputs  : data/raw/mendeley_smishing/, data/raw/indo/{rahmi2016,bopbi,curated_2022plus}/
+Inputs  : data/raw/mendeley_smishing/, data/raw/indo/{rahmi2016,bopbi,curated_2022plus,judol_0xrafie}/
 Outputs : data/processed/phishguard_sms.csv, train.csv, test.csv  (columns: text,label,lang,source)
 """
 import csv
@@ -17,6 +17,15 @@ RAW = ROOT / "data" / "raw"
 OUT = ROOT / "data" / "processed"
 SEED = 42
 TEST_FRAC = 0.2
+# Sources added after the first split get their own RNG, so the train/test membership of the older
+# sources stays exactly the same and old vs new models can be compared on the same test messages.
+OWN_RNG_SOURCES = {"judol_0xrafie"}
+# Personal data: Indonesian mobile numbers (also "+62 878-..." with a separator after 62), WhatsApp links with
+# any country code (wa.me/60..., wa.me/855...), and personal Facebook profile IDs.
+PHONE = re.compile(r"(?:\+?62[\s.-]?|\b0)8\d[\d\s.-]{7,}|wa\.me/\+?\d{6,}|profile\.php\?id=\d+")
+# Turkish letters are matched case-sensitively: with re.I, "İ" would also match a plain "i".
+TURKISH_CHARS = re.compile(r"[ışğŞĞİ]")
+TURKISH_WORDS = re.compile(r"\b(?:kazan\w*|giriş|oyun\w*|tebrik|kullanıcı\w*)\b", re.I)
 
 
 def read_rows(path):
@@ -64,6 +73,27 @@ def curated():
                 yield text, r["label"], "id", "curated_2022plus"
 
 
+def judol():
+    # Ekaputra (2026), CC BY 4.0: Facebook/TikTok/X captions hand-labelled 1.0 = online-gambling promotion,
+    # 0.0 = not (news, anti-gambling posts, everyday posts caught by gambling keywords). Judol is illegal in
+    # Indonesia and its sites are fraud funnels -> phishing; non-gambling posts -> aman (hard negatives).
+    # Filters (see plans/2026-11-12-dataset-judol.md): drop rows with phone numbers, wa.me links or FB profile IDs (privacy), Turkish betting
+    # posts, mostly non-Latin text, > 2000 chars (API limit), and < 3 real words once links/#tags/@mentions are
+    # removed; @mentions are replaced by "@user".
+    # captions contain quoted newlines, so read with the csv module on the file (read_rows splits lines first)
+    with open(RAW / "indo" / "judol_0xrafie" / "dataset.csv", newline="", encoding="utf-8") as f:
+        source_rows = list(csv.DictReader(f))
+    for r in source_rows:
+        text = norm(r["text_caption"] or "")
+        letters = [c for c in text if c.isalpha()]
+        if (PHONE.search(text) or TURKISH_CHARS.search(text) or TURKISH_WORDS.search(text) or len(text) > 2000
+                or sum(ord(c) > 0x24F for c in letters) > 0.3 * max(1, len(letters))
+                or len(re.findall(r"[A-Za-z]{2,}", re.sub(r"https?://\S+|[#@]\w+", "", text))) < 3):
+            continue
+        text = re.sub(r"@\w+", "@user", text)
+        yield text, {"1.0": "phishing", "0.0": "aman"}[r["label"].strip()], "id", "judol_0xrafie"
+
+
 def kelompok():
     # Real SMS/WA collected by group members (see data/raw/indo/kelompok/README.md). template.csv is skipped.
     for f in sorted((RAW / "indo" / "kelompok").glob("*.csv")):
@@ -80,7 +110,7 @@ def norm(text):
 
 def main():
     seen, rows, conflicts = {}, [], 0
-    for text, label, lang, source in [*mendeley(), *rahmi(), *bopbi(), *curated(), *kelompok()]:
+    for text, label, lang, source in [*mendeley(), *rahmi(), *bopbi(), *curated(), *judol(), *kelompok()]:
         text = norm(text)
         if not text:
             continue
@@ -100,7 +130,7 @@ def main():
     train, test = [], []
     for stratum in sorted({(r["label"], r["source"]) for r in rows}):
         group = [r for r in rows if (r["label"], r["source"]) == stratum]
-        rng.shuffle(group)
+        (random.Random(f"{SEED}:{stratum}") if stratum[1] in OWN_RNG_SOURCES else rng).shuffle(group)
         n_test = round(len(group) * TEST_FRAC)
         test += group[:n_test]
         train += group[n_test:]

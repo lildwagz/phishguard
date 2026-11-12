@@ -3,3 +3,4 @@
 !api/requirements.txt
 !model/phishguard.joblib
 !mobile/build/web
+!mobile/nginx.conf

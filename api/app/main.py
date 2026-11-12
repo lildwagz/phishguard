@@ -31,6 +31,9 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name
 bundle = joblib.load(MODEL_PATH)
 model = bundle["pipeline"]
 MODEL_VERSION = f'{bundle["name"]}-{bundle["version"]}'
+# Optional online-gambling (judol) detector trained by src/model/train.py; older bundles do not have it.
+judol = bundle.get("judol")
+JUDOL_REASON = "Terindikasi promosi judi online (model deteksi judol)"
 
 app = FastAPI(title="PhishGuard API", version="1.0.0")
 limiter = FixedWindowLimiter(RATE_LIMIT_PER_MIN)
@@ -71,14 +74,25 @@ def predict(req: PredictRequest):
     t0 = time.perf_counter()
     proba = dict(zip(model.classes_, model.predict_proba([req.text])[0]))
     hits = rules.check(req.text)
-    # Final decision: phishing if the model OR any rule says so (rules only ever add phishing signals).
-    if proba["phishing"] >= 0.5 or hits:
+    reasons = [h.reason for h in hits]
+    scores = [float(proba["phishing"])] + [h.score for h in hits]
+    judol_hit = False
+    if judol is not None:
+        p_judol = float(judol["pipeline"].predict_proba([req.text])[0][1])
+        if p_judol >= judol["threshold"]:
+            judol_hit = True
+            scores.append(p_judol)
+            if not any(h.id == "online_gambling" for h in hits):  # one gambling reason is enough
+                reasons.append(JUDOL_REASON)
+    # Final decision: phishing if the main model, the judol detector OR any rule says so
+    # (rules and the judol detector only ever add phishing signals).
+    if proba["phishing"] >= 0.5 or hits or judol_hit:
         label = "phishing"
-        confidence = max([float(proba["phishing"])] + [h.score for h in hits])
+        confidence = max(scores)
     else:
         label, confidence = "aman", float(proba["aman"])
     latency_ms = round((time.perf_counter() - t0) * 1000, 2)
-    log.info("predict len=%d label=%s confidence=%.3f rules=%s latency_ms=%.2f",
-             len(req.text), label, confidence, ",".join(h.id for h in hits) or "-", latency_ms)
+    log.info("predict len=%d label=%s confidence=%.3f rules=%s judol=%s latency_ms=%.2f",
+             len(req.text), label, confidence, ",".join(h.id for h in hits) or "-", judol_hit, latency_ms)
     return PredictResponse(label=label, confidence=round(confidence, 4), model_version=MODEL_VERSION,
-                           latency_ms=latency_ms, reasons=[h.reason for h in hits])
+                           latency_ms=latency_ms, reasons=reasons)
