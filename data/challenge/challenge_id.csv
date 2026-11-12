@@ -1,0 +1,10 @@
+text,label,note
+"Paket anda tertahan di gudang J&T karena alamat tidak lengkap. Lengkapi data di jnt-ekspres-id.com/cek",phishing,modus kurir palsu
+"Assalamualaikum, ini undangan pernikahan kami, silakan dibuka ya. Undangan.apk",phishing,modus APK undangan
+"BCA: Tarif transfer berubah jadi Rp150.000/bulan. Jika tidak setuju isi form di bca-tarif.id dalam 1x24 jam",phishing,modus perubahan tarif bank
+"Mama lagi di kantor polisi, tolong transfer 5jt ke rek BRI 1234-5678 sekarang, jangan telp dulu",phishing,modus keluarga darurat
+"Kode OTP anda 482913. Petugas kami akan menghubungi, mohon sebutkan kode tersebut untuk verifikasi hadiah",phishing,modus minta OTP
+"Kode OTP Gojek kamu 482913. JANGAN berikan kode ini ke siapa pun, termasuk pihak Gojek.",aman,OTP resmi
+"Pak, rapat kelompok AI diundur jadi Kamis jam 13.00 di lab 3 ya",aman,pesan pribadi
+"Paket Shopee kamu SPX1234 sedang dikirim kurir, estimasi tiba hari ini.",aman,notifikasi kurir resmi
+"Your Amazon order #112-55 has shipped and will arrive Thursday.",aman,notifikasi resmi EN

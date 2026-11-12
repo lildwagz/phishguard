@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+.pytest_cache/
+mobile/build/
+mobile/.dart_tool/
+
+# Not published (public repo): course material belongs to the lecturer/UBSI, blank UBSI templates
+materi-kuliah/
+docs/Template_*.docx
+# Local / generated
+*.pyc
+.env
+# Unlicensed datasets (no redistribution right; ekaputra also has real sender phone numbers) - kept locally only, never used for training
+data/raw/indo/ekaputra_sms-labeled-all.csv
+data/raw/indo/spacegoalex/

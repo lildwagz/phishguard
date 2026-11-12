@@ -1,0 +1,87 @@
+{
+  "model": "tfidf_logreg",
+  "version": "20261111",
+  "trained_at": "2026-11-11T17:48:28+00:00",
+  "cv_f1_phishing_train": {
+    "tfidf_naive_bayes": 0.8521,
+    "tfidf_logreg": 0.907
+  },
+  "test_overall": {
+    "n": 1388,
+    "accuracy": 0.9784,
+    "precision_phishing": 0.9086,
+    "recall_phishing": 0.9191,
+    "f1_phishing": 0.9138,
+    "confusion_matrix [[aman->aman, aman->phish], [phish->aman, phish->phish]]": [
+      [
+        1199,
+        16
+      ],
+      [
+        14,
+        159
+      ]
+    ]
+  },
+  "test_by_lang": {
+    "en": {
+      "n": 1160,
+      "accuracy": 0.981,
+      "precision_phishing": 0.8818,
+      "recall_phishing": 0.9151,
+      "f1_phishing": 0.8981,
+      "confusion_matrix [[aman->aman, aman->phish], [phish->aman, phish->phish]]": [
+        [
+          1041,
+          13
+        ],
+        [
+          9,
+          97
+        ]
+      ]
+    },
+    "id": {
+      "n": 228,
+      "accuracy": 0.9649,
+      "precision_phishing": 0.9538,
+      "recall_phishing": 0.9254,
+      "f1_phishing": 0.9394,
+      "confusion_matrix [[aman->aman, aman->phish], [phish->aman, phish->phish]]": [
+        [
+          158,
+          3
+        ],
+        [
+          5,
+          62
+        ]
+      ]
+    }
+  },
+  "baseline_always_aman_accuracy": 0.8754,
+  "avg_predict_ms_per_message": 0.145,
+  "challenge_id_modern": {
+    "n": 9,
+    "accuracy": 0.5556,
+    "precision_phishing": 1.0,
+    "recall_phishing": 0.2,
+    "f1_phishing": 0.3333,
+    "confusion_matrix [[aman->aman, aman->phish], [phish->aman, phish->phish]]": [
+      [
+        4,
+        0
+      ],
+      [
+        4,
+        1
+      ]
+    ],
+    "missed": [
+      "modus kurir palsu",
+      "modus APK undangan",
+      "modus perubahan tarif bank",
+      "modus minta OTP"
+    ]
+  }
+}

@@ -1,0 +1,45 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>
+body{margin:0;width:1400px;height:660px;background:#fff;font-family:"DejaVu Sans",Arial,sans-serif;color:#1E2A5A}
+h1{font-size:30px;margin:28px 40px 6px}
+.sub{margin:0 40px 18px;color:#555;font-size:15px;border-bottom:3px solid #1597AB;padding-bottom:12px}
+.box{position:absolute;border:2px solid #1597AB;border-radius:14px;background:#EAF3F8;padding:10px 12px;box-sizing:border-box}
+.box h3{margin:0 0 6px;color:#0E7F92;font-size:17px;text-align:center}
+.box p{margin:0;font-size:13.5px;line-height:1.35;text-align:center}
+.red{border-color:#B23B3B;background:#FBEFEF}.red h3{color:#9E2A2A}
+.grey{border-style:dashed;border-color:#888;background:#F5F5F5}.grey h3{color:#555}
+svg{position:absolute;left:0;top:0}
+.lbl{font-size:12.5px;fill:#1E2A5A}
+.foot{position:absolute;left:40px;bottom:18px;font-size:13px;color:#555}
+</style></head><body>
+<h1>Arsitektur Sistem PhishGuard</h1>
+<div class="sub">Deteksi SMS/Email phishing · Flutter (Android &amp; Web) → REST API FastAPI → AI service (TF-IDF + Logistic Regression + lapisan aturan) · Docker</div>
+
+<div class="box" style="left:40px;top:150px;width:220px;height:150px"><h3>PENGGUNA</h3><p>Menempel/mengetik pesan, memilih teks di aplikasi lain, atau membagikan SMS/WhatsApp lewat menu Bagikan</p></div>
+
+<div class="box" style="left:310px;top:120px;width:260px;height:230px"><h3>FLUTTER CLIENT</h3><p>Android (APK) &amp; Web<br>• layar utama: input, validasi kosong, kartu hasil + alasan<br>• popup <i>Scan dengan PhishGuard</i> dari seleksi teks (PROCESS_TEXT) &amp; menu Bagikan (SEND)<br>• riwayat lokal (shared_preferences)</p></div>
+
+<div class="box" style="left:620px;top:120px;width:250px;height:230px"><h3>REST API (FastAPI)</h3><p>GET /health · POST /v1/predict<br>• validasi Pydantic: wajib, tidak kosong, ≤ 2.000 karakter (422)<br>• rate limit 60/menit/IP (429)<br>• body ≤ 32 KB (413)<br>• CORS hanya origin web<br>• response: label, confidence, model_version, latency_ms, reasons</p></div>
+
+<div class="box" style="left:920px;top:120px;width:440px;height:230px"><h3>AI SERVICE (inference)</h3><p><b>Model</b>: pipeline TF-IDF kata 1–2 gram + karakter 3–5 gram → Logistic Regression (class_weight balanced), file <i>phishguard.joblib</i>, dimuat sekali saat start<br><b>Lapisan aturan</b> (rules.py): file .apk, minta kode OTP, kerja dibayar per tugas, domain tiruan brand<br>Keputusan: phishing jika model ≥ 0,5 <b>atau</b> aturan terpicu</p></div>
+
+<div class="box red" style="left:620px;top:420px;width:250px;height:170px"><h3>DATA / LOG</h3><p>Log hanya: panjang teks, label, confidence, aturan, latency.<br><b>Isi pesan tidak disimpan &amp; tidak di-log</b> (NFR-03)</p></div>
+
+<div class="box" style="left:920px;top:420px;width:440px;height:170px"><h3>DEPLOYMENT + MONITORING</h3><p>Docker Compose: container <i>api</i> (python:3.14-slim, port 8000, HEALTHCHECK /health) + <i>web</i> (nginx, port 8080)<br>Monitoring: latency_ms &amp; model_version di setiap response, log container<br>Rencana cloud: Docker Space/PaaS (materi P6) dengan HTTPS</p></div>
+
+<div class="box grey" style="left:40px;top:420px;width:530px;height:170px"><h3>TRAINING (offline, bukan di aplikasi)</h3><p>data/raw (Mendeley smishing EN, Rahmi &amp; Wibisono ID, bopbi, kutipan berita 2022+) → prepare_dataset.py → train/test 80/20 → train.py (bandingkan NB vs LogReg, 5-fold CV) → model/phishguard.joblib + metrics.json</p></div>
+
+<svg width="1400" height="660">
+<defs><marker id="a" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1E2A5A"/></marker></defs>
+<line x1="262" y1="225" x2="306" y2="225" stroke="#1E2A5A" stroke-width="3" marker-end="url(#a)"/>
+<line x1="572" y1="205" x2="616" y2="205" stroke="#1E2A5A" stroke-width="3" marker-end="url(#a)"/>
+<line x1="616" y1="250" x2="574" y2="250" stroke="#1E2A5A" stroke-width="3" marker-end="url(#a)"/>
+<text x="574" y="196" class="lbl">JSON</text><text x="574" y="268" class="lbl">hasil</text>
+<line x1="872" y1="225" x2="916" y2="225" stroke="#1E2A5A" stroke-width="3" marker-end="url(#a)"/>
+<line x1="745" y1="352" x2="745" y2="414" stroke="#1E2A5A" stroke-width="3" marker-end="url(#a)"/>
+<line x1="1140" y1="352" x2="1140" y2="414" stroke="#1E2A5A" stroke-width="3" marker-end="url(#a)"/>
+<path d="M305,420 L305,388 L1000,388 L1000,356" fill="none" stroke="#888" stroke-width="2.5" stroke-dasharray="7,5" marker-end="url(#a)"/>
+<text x="330" y="381" class="lbl">artefak model (.joblib) dipakai saat inference</text>
+</svg>
+<div class="foot">Ketertelusuran: FR-01/FR-04 (hasil + alasan) · FR-02 (validasi 422) · FR-03 (riwayat lokal) · FR-05/FR-06 (seleksi teks &amp; Bagikan) · NFR-01 latency (latency_ms) · NFR-03 (log tanpa isi pesan, 429/413)</div>
+</body></html>

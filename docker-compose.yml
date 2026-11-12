@@ -1,0 +1,26 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    image: phishguard-api:latest
+    ports:
+      - "8000:8000"
+    environment:
+      # Hardening (plans/2026-11-12-keamanan-api.md). Add the public web origin here when deployed.
+      CORS_ORIGINS: "http://localhost:8080,http://127.0.0.1:8080"
+      RATE_LIMIT_PER_MIN: "60"
+      MAX_BODY_BYTES: "32768"
+    restart: unless-stopped
+
+  # Flutter web UI at http://localhost:8080 (build first: cd mobile && flutter build web --release)
+  web:
+    build:
+      context: .
+      dockerfile: mobile/Dockerfile.web
+    image: phishguard-web:latest
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+    restart: unless-stopped

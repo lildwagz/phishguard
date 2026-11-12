@@ -1,0 +1,184 @@
+{
+  "model": "tfidf_logreg",
+  "version": "20261111",
+  "trained_at": "2026-11-11T19:29:41+00:00",
+  "cv_f1_phishing_train": {
+    "tfidf_naive_bayes": 0.8382,
+    "tfidf_logreg": 0.9186
+  },
+  "test_overall": {
+    "n": 1413,
+    "accuracy": 0.9781,
+    "precision_phishing": 0.9231,
+    "recall_phishing": 0.9184,
+    "f1_phishing": 0.9207,
+    "confusion_matrix [[aman->aman, aman->phish], [phish->aman, phish->phish]]": [
+      [
+        1202,
+        15
+      ],
+      [
+        16,
+        180
+      ]
+    ]
+  },
+  "test_by_lang": {
+    "en": {
+      "n": 1160,
+      "accuracy": 0.9819,
+      "precision_phishing": 0.8972,
+      "recall_phishing": 0.9057,
+      "f1_phishing": 0.9014,
+      "confusion_matrix [[aman->aman, aman->phish], [phish->aman, phish->phish]]": [
+        [
+          1043,
+          11
+        ],
+        [
+          10,
+          96
+        ]
+      ]
+    },
+    "id": {
+      "n": 253,
+      "accuracy": 0.9605,
+      "precision_phishing": 0.9545,
+      "recall_phishing": 0.9333,
+      "f1_phishing": 0.9438,
+      "confusion_matrix [[aman->aman, aman->phish], [phish->aman, phish->phish]]": [
+        [
+          159,
+          4
+        ],
+        [
+          6,
+          84
+        ]
+      ]
+    }
+  },
+  "test_by_source": {
+    "bopbi2021": {
+      "n": 9,
+      "accuracy": 1.0,
+      "precision_phishing": 1.0,
+      "recall_phishing": 1.0,
+      "f1_phishing": 1.0,
+      "confusion_matrix [[aman->aman, aman->phish], [phish->aman, phish->phish]]": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          9
+        ]
+      ]
+    },
+    "curated_2022plus": {
+      "n": 16,
+      "accuracy": 0.9375,
+      "precision_phishing": 1.0,
+      "recall_phishing": 0.9286,
+      "f1_phishing": 0.963,
+      "confusion_matrix [[aman->aman, aman->phish], [phish->aman, phish->phish]]": [
+        [
+          2,
+          0
+        ],
+        [
+          1,
+          13
+        ]
+      ]
+    },
+    "mendeley_smishing": {
+      "n": 1160,
+      "accuracy": 0.9819,
+      "precision_phishing": 0.8972,
+      "recall_phishing": 0.9057,
+      "f1_phishing": 0.9014,
+      "confusion_matrix [[aman->aman, aman->phish], [phish->aman, phish->phish]]": [
+        [
+          1043,
+          11
+        ],
+        [
+          10,
+          96
+        ]
+      ]
+    },
+    "rahmi2016": {
+      "n": 228,
+      "accuracy": 0.9605,
+      "precision_phishing": 0.9394,
+      "recall_phishing": 0.9254,
+      "f1_phishing": 0.9323,
+      "confusion_matrix [[aman->aman, aman->phish], [phish->aman, phish->phish]]": [
+        [
+          157,
+          4
+        ],
+        [
+          5,
+          62
+        ]
+      ]
+    }
+  },
+  "baseline_always_aman_accuracy": 0.8613,
+  "avg_predict_ms_per_message": 0.144,
+  "nfr03": {
+    "target": "accuracy >= 0.85 and f1_phishing >= 0.85 on test set",
+    "accuracy_ok": true,
+    "f1_phishing_ok": true,
+    "pass": true
+  },
+  "challenge_id": {
+    "n": 9,
+    "accuracy": 1.0,
+    "precision_phishing": 1.0,
+    "recall_phishing": 1.0,
+    "f1_phishing": 1.0,
+    "confusion_matrix [[aman->aman, aman->phish], [phish->aman, phish->phish]]": [
+      [
+        4,
+        0
+      ],
+      [
+        0,
+        5
+      ]
+    ],
+    "missed_phishing": [],
+    "false_alarm_aman": []
+  },
+  "challenge_id_v2": {
+    "n": 12,
+    "accuracy": 0.6667,
+    "precision_phishing": 0.75,
+    "recall_phishing": 0.5,
+    "f1_phishing": 0.6,
+    "confusion_matrix [[aman->aman, aman->phish], [phish->aman, phish->phish]]": [
+      [
+        5,
+        1
+      ],
+      [
+        3,
+        3
+      ]
+    ],
+    "missed_phishing": [
+      "kurir APK",
+      "lowongan part-time",
+      "foto paket APK"
+    ],
+    "false_alarm_aman": [
+      "notifikasi transaksi bank resmi"
+    ]
+  }
+}

@@ -1,0 +1,5 @@
+*
+!api/app
+!api/requirements.txt
+!model/phishguard.joblib
+!mobile/build/web

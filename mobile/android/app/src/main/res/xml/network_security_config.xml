@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The course-project API runs over plain HTTP on a laptop (emulator: 10.0.2.2, phone: laptop LAN IP).
+     Cleartext is allowed so the app can reach it. For a real deployment, serve the API over HTTPS and remove this. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

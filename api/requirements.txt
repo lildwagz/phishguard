@@ -1,0 +1,9 @@
+# Runtime deps for the API. scikit-learn/joblib versions must match the ones used to train model/phishguard.joblib.
+fastapi==0.162.4
+uvicorn[standard]==0.54.0
+pydantic==2.14.3
+scikit-learn==1.9.1
+scipy==1.18.1
+numpy==2.5.4
+joblib==1.6.0
+threadpoolctl==3.8.0

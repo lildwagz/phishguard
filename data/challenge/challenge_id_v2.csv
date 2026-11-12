@@ -1,0 +1,13 @@
+text,label,note
+"BCA: Transaksi debit kartu Anda Rp250.000 di INDOMARET pada 11/11 berhasil. Info Halo BCA 1500888",aman,notifikasi transaksi bank resmi
+"Paket JP1234567890 sudah diterima oleh YANTI. Terima kasih telah menggunakan J&T Express.",aman,notifikasi kurir resmi
+"Kode verifikasi WhatsApp Anda: 482-913. Jangan bagikan kode ini.",aman,OTP resmi
+"Token PLN anda 1234-5678-9012-3456-7890, 33.6 kWh. Terima kasih.",aman,token PLN
+"Bro nanti malam jadi nonton bola di rumah Dimas? Gw bawa cemilan",aman,pesan pribadi
+"Info dari kampus: UTS mata kuliah Kecerdasan Buatan dilaksanakan Senin 17 Nov, ruang 402.",aman,info kampus
+"Paket Anda gagal dikirim, silakan unduh aplikasi cek resi berikut untuk konfirmasi alamat: Cek_Resi_JNT.apk",phishing,kurir APK
+"Nasabah BRI Yth, tarif transaksi Anda akan naik menjadi Rp150rb/bulan. Konfirmasi ketidaksetujuan di bri-tarif-baru.com",phishing,tarif bank
+"Halo kak, kami dari tim rekrutmen Shopee, ada kerja paruh waktu like video dapat 50rb per tugas, tertarik? Chat admin ya",phishing,lowongan part-time
+"Mohon maaf tadi saya salah kirim kode verifikasi ke nomor anda, tolong kirimkan kode 6 digit itu ke saya ya kak",phishing,minta OTP salah kirim
+"Ini foto paket kakak ya, tolong dicek dulu sebelum dikirim kurir: LIHAT_FOTO_PAKET.apk",phishing,foto paket APK
+"Akun DANA Anda akan dinonaktifkan dalam 24 jam. Verifikasi segera di dana-verifikasi.id agar saldo tidak hangus",phishing,akun e-wallet
