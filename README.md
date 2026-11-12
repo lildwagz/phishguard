@@ -56,7 +56,7 @@ Lihat `mockups/arsitektur.png` dan `mockups/mockup_flutter.png` untuk visualnya.
 ```
 PhishGuard/
 ├── README.md                  ← file ini
-├── docs/                      ← dokumen akademik (checkpoint, template proposal/laporan UBSI)
+├── docs/                      ← dokumen akademik (checkpoint, proposal, laporan, template UBSI); hanya lokal + Google Drive, tidak di repo
 ├── materi-kuliah/             ← 16 slide PDF Pertemuan 1-16 (materi mata kuliah, referensi metodologi per minggu)
 ├── mockups/                   ← source image diagram arsitektur & mockup Flutter (PNG)
 ├── plans/                     ← semua rencana & catatan riset (1 file bertanggal per topik)
