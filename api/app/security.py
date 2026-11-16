@@ -3,14 +3,24 @@
 Pure ASGI middlewares, no extra dependencies:
 - BodySizeLimit: rejects request bodies above MAX_BODY_BYTES with 413 *before* JSON parsing.
 - RateLimit: fixed-window counter per client IP on /v1/predict, 429 + Retry-After when exceeded.
+- RequestId: gives every request an ID (X-Request-ID response header, and `id=` in the predict log line),
+  so one request can be traced from the response to the log without logging the message text.
 
 The limiter lives in process memory, so with N uvicorn workers the effective limit is up to N x the
 configured value. Behind a reverse proxy (e.g. Tailscale Funnel) set uvicorn's FORWARDED_ALLOW_IPS to the
 proxy address so the real client IP from X-Forwarded-For is used instead of the proxy's IP.
 """
+import contextvars
 import json
 import math
+import re
 import time
+import uuid
+
+# Current request's ID, readable from the endpoint for logging ("-" outside a request).
+request_id_var: contextvars.ContextVar[str] = contextvars.ContextVar("request_id", default="-")
+# Incoming IDs are reused only if they look like an ID: no spaces/newlines (log injection) and bounded length.
+_VALID_RID = re.compile(rb"^[A-Za-z0-9-]{8,64}$")
 
 
 async def _send_json(send, status: int, detail: str, headers: list[tuple[bytes, bytes]] = ()):
@@ -92,3 +102,30 @@ class RateLimit:
                 return await _send_json(send, 429, "Terlalu banyak permintaan, coba lagi sebentar",
                                         [(b"retry-after", str(math.ceil(wait)).encode())])
         return await self.app(scope, receive, send)
+
+
+class RequestId:
+    """Outermost middleware: reuse a valid incoming X-Request-ID (nginx sends its $request_id) or create one,
+    expose it to the app via request_id_var and add it to every response, including 413/429 from the
+    middlewares inside it."""
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            return await self.app(scope, receive, send)
+        rid = next((v for k, v in scope["headers"] if k == b"x-request-id"), b"")
+        rid = rid.decode() if _VALID_RID.match(rid) else uuid.uuid4().hex
+        token = request_id_var.set(rid)
+
+        async def send_with_id(message):
+            if message["type"] == "http.response.start":
+                headers = [(k, v) for k, v in message.get("headers", []) if k.lower() != b"x-request-id"]
+                message = {**message, "headers": headers + [(b"x-request-id", rid.encode())]}
+            await send(message)
+
+        try:
+            await self.app(scope, receive, send_with_id)
+        finally:
+            request_id_var.reset(token)

@@ -1,4 +1,5 @@
 import logging
+import re
 import statistics
 import time
 
@@ -56,7 +57,7 @@ def test_message_text_not_logged(caplog):  # NFR-02
     with caplog.at_level(logging.DEBUG):
         predict(secret)
     assert "rahasia-unik-8841" not in caplog.text
-    assert "predict len=" in caplog.text
+    assert re.search(r"predict id=[A-Za-z0-9-]+ len=", caplog.text)
 
 
 def test_latency_p95_under_3s():  # NFR-01 (in-process; Docker check is in README)
@@ -67,3 +68,13 @@ def test_latency_p95_under_3s():  # NFR-01 (in-process; Docker check is in READM
         times.append(time.perf_counter() - t0)
     p95 = statistics.quantiles(times, n=20)[18]
     assert p95 < 3.0
+
+
+def test_endpoints_run_on_event_loop_not_threadpool():
+    # Stress test 2026-11-14 (plans/2026-11-14-stress-test.md): as sync `def`, FastAPI ran predict in its threadpool
+    # and ~40 threads per worker fought over the GIL: 200 users -> 90 req/s, p95 2.0 s, 23% 503. As `async def`
+    # (inference is ~5 ms CPU, no I/O) the same load gave 199 req/s, p95 21 ms, 0 errors.
+    import inspect
+    from app import main
+    assert inspect.iscoroutinefunction(main.predict)
+    assert inspect.iscoroutinefunction(main.health)

@@ -97,3 +97,11 @@ Permintaan user: "maksud saya itu tailscalenya per container" (bukan `tailscale 
 APK di HP asli memakai `https://phishguard.taile0ea7c.ts.net` (user) → request `Dart/3.13` 200 di log nginx.
 Log yang sama membuktikan Funnel meneruskan IP pengunjung asli; rate limit sekarang per pengunjung. Detail dan bukti: `plans/2026-11-12-keamanan-api.md`, bagian "Koreksi temuan Funnel".
 Catatan: beberapa menit setelah sertifikat terbit, bot internet (pemindai dari log Certificate Transparency) sudah mengakses URL; 4 POST `/v1/predict` dari luar tercatat. Ini wajar untuk URL publik dan alasan Funnel sebaiknya dimatikan di luar demo.
+
+## Insiden 2026-11-13 s/d 2026-11-14: URL publik mati
+- Gejala: user tidak bisa membuka URL. Container sehat, tetapi ts-web mendapat `PollNetMap: initial fetch failed 404: node not found` sejak 13 Nov 01:57,
+  tepat setelah laptop bangun dari sleep ±7,5 jam. Node `phishguard` terhapus dari tailnet (key belum kedaluwarsa: 2027-05-11), dugaan kuat auth key ephemeral.
+- Pemulihan (14 Nov 22:33): user membuat auth key baru (non-ephemeral) di `.env`; volume `phishguard_ts-web-state` dihapus, ts-web dinyalakan ulang.
+  Node baru `phishguard` (100.81.109.97), nama dan URL sama. Sertifikat baru berlaku s/d 12 Feb 2027.
+- Uji ulang lewat DNS publik: 11/11 kasus benar, health 200, 40 KB 413; Chrome: PHISHING 99,8% dengan alasan domain.
+- Pelajaran: auth key untuk sidecar harus non-ephemeral; untuk demo, matikan sleep otomatis laptop.

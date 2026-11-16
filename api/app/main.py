@@ -14,7 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
 
 from app import rules
-from app.security import BodySizeLimit, FixedWindowLimiter, RateLimit
+from app.security import BodySizeLimit, FixedWindowLimiter, RateLimit, RequestId, request_id_var
 
 MAX_CHARS = 2000
 # 2000 characters as JSON, worst case \uXXXX\uXXXX escapes per emoji, is < 24 KB.
@@ -37,12 +37,14 @@ JUDOL_REASON = "Terindikasi promosi judi online (model deteksi judol)"
 
 app = FastAPI(title="PhishGuard API", version="1.0.0")
 limiter = FixedWindowLimiter(RATE_LIMIT_PER_MIN)
-# Order: the last added middleware runs first -> CORS, then rate limit, then body size, then the app.
+# Order: the last added middleware runs first -> request ID, CORS, rate limit, body size, then the app.
 app.add_middleware(BodySizeLimit, max_bytes=MAX_BODY_BYTES)
 app.add_middleware(RateLimit, get_limiter=lambda: limiter, paths=("/v1/predict",))
 # Only the web build's origin may call from a browser; no cookies/credentials are used.
 app.add_middleware(CORSMiddleware, allow_origins=CORS_ORIGINS, allow_methods=["GET", "POST"],
-                   allow_headers=["content-type"])
+                   allow_headers=["content-type"], expose_headers=["X-Request-ID"])
+# Outermost, so 413/429/422 answers also carry X-Request-ID (issue #8).
+app.add_middleware(RequestId)
 
 
 class PredictRequest(BaseModel):
@@ -64,13 +66,16 @@ class PredictResponse(BaseModel):
     reasons: list[str] = []  # human-readable rule hits (empty if only the ML model decided)
 
 
+# Both endpoints are `async def` on purpose: inference is ~5 ms of CPU with no I/O, so running it on the event loop
+# is cheaper than FastAPI's threadpool, where ~40 threads per worker contend for the GIL under load
+# (stress test 2026-11-14: 200 users, 90 -> 199 req/s, p95 2.0 s -> 21 ms, 503 errors 23% -> 0).
 @app.get("/health")
-def health():
+async def health():
     return {"status": "ok", "model_version": MODEL_VERSION}
 
 
 @app.post("/v1/predict", response_model=PredictResponse)
-def predict(req: PredictRequest):
+async def predict(req: PredictRequest):
     t0 = time.perf_counter()
     proba = dict(zip(model.classes_, model.predict_proba([req.text])[0]))
     hits = rules.check(req.text)
@@ -92,7 +97,7 @@ def predict(req: PredictRequest):
     else:
         label, confidence = "aman", float(proba["aman"])
     latency_ms = round((time.perf_counter() - t0) * 1000, 2)
-    log.info("predict len=%d label=%s confidence=%.3f rules=%s judol=%s latency_ms=%.2f",
-             len(req.text), label, confidence, ",".join(h.id for h in hits) or "-", judol_hit, latency_ms)
+    log.info("predict id=%s len=%d label=%s confidence=%.3f rules=%s judol=%s latency_ms=%.2f",
+             request_id_var.get(), len(req.text), label, confidence, ",".join(h.id for h in hits) or "-", judol_hit, latency_ms)
     return PredictResponse(label=label, confidence=round(confidence, 4), model_version=MODEL_VERSION,
                            latency_ms=latency_ms, reasons=reasons)
