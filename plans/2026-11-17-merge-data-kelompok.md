@@ -30,3 +30,7 @@ Permintaan user: "oke jalankan" (perbaiki split, merge PR #12, retrain + tes + r
   EN 0,897 · ID 0,916 (314, termasuk ±data kelompok berbahasa Inggris yang tercatat `id`) · kelompok 0,833. CV F1 0,898. Challenge v1 model 8/9 (lolos "modus kurir palsu"), v2 8/12.
   Detektor judol F1 0,947 (sebelumnya 0,954).
 - 58 pytest lulus. Container api dibangun ulang: `/health` lokal dan publik = `tfidf_logreg-20261117`; 11/11 kasus live; challenge lewat API 20/21 (sama); QA F1–F10 10/10.
+- Temuan dari data kelompok: aturan `lookalike_domain` memberi false alarm pada promo resmi ShopeePay (`app.shopeepay.co.id`).
+  Saat diperiksa, pencocokan domain resmi memakai `endswith` tanpa batas titik, sehingga `hadiah-bca.co.id` juga lolos sebagai resmi (celah).
+  TDD: 2 tes baru gagal dulu, lalu `shopeepay.co.id` ditambahkan dan pencocokan dibatasi per label domain. 60 pytest lulus;
+  0 false alarm aturan pada 6.257 SMS aman + 2.362 posting bukan judol; live: `hadiah-bca.co.id` → phishing dengan alasan domain, promo ShopeePay → aman.

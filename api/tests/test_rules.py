@@ -17,6 +17,8 @@ client = TestClient(app)
     ("Tarif transfer naik, isi form di bca-tarif.id", "lookalike_domain"),
     ("Akun DANA Anda diblokir, verifikasi di https://dana-verifikasi.id/login", "lookalike_domain"),
     ("Paket tertahan, update alamat di jnt-ekspres.xyz", "lookalike_domain"),
+    # brand + official suffix glued with a hyphen is NOT the official domain
+    ("Selamat! Klaim hadiah Rp 100jt di hadiah-bca.co.id sekarang", "lookalike_domain"),
     # Real message reported by the user (2026-11-12): judol site with an obfuscated "claim THR" lure
     ("Ke cici01 peener1ma THR 275.000! akaligabandar.mom aambil skrg pkai k0dee : PUASA2026", "online_gambling"),
     ("Bonus deposit 100% slot gacor, daftar sekarang di akaligabandar.mom", "online_gambling"),
@@ -34,6 +36,8 @@ def test_rule_fires(text, rule):
     "Nanti kirim pin lokasi rumahmu ya biar aku ga nyasar",  # 'pin lokasi' is not a code request
     "Info lengkap kunjungi www.bca.co.id atau hubungi Halo BCA 1500888",
     "Cek status paket di https://jet.co.id/track",
+    # real operator SMS from the group data (PR #12): official ShopeePay subdomain
+    "PULSA IM3 5rb CUMA bayar Rp1! Khusus pengguna baru ShopeePay. Isi ulang sekarang! https://app.shopeepay.co.id/u/promo",
     "Daftar ulang BPJS di https://bpjs-kesehatan.go.id ya",
     "Aku like banget sama kerjaan baru, gajinya 5 juta",  # salary mention, not a pay-per-task offer
     "Selamat pagi, rapat dimulai jam 9 di ruang 402",

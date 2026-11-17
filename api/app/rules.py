@@ -53,7 +53,7 @@ BRANDS = {
 OFFICIAL_SUFFIXES = (
     "bca.co.id", "klikbca.com", "bri.co.id", "bni.co.id", "bankmandiri.co.id", "btn.co.id", "bankbsi.co.id",
     "cimbniaga.co.id", "danamon.co.id", "jenius.com", "ocbc.id", "dana.id", "ovo.id", "gojek.com", "grab.com",
-    "shopee.co.id", "tokopedia.com", "lazada.co.id", "jet.co.id", "jne.co.id", "sicepat.com", "anteraja.id",
+    "shopee.co.id", "shopeepay.co.id", "tokopedia.com", "lazada.co.id", "jet.co.id", "jne.co.id", "sicepat.com", "anteraja.id",
     "posindonesia.co.id", "bpjs-kesehatan.go.id", "bpjsketenagakerjaan.go.id", "pln.co.id", "telkomsel.com",
     "tsel.me", "indosatooredoo.com", "indosat.com", "im3.id", "xl.co.id", "tri.co.id", "grab.co", "ojk.go.id", "pajak.go.id", "kemensos.go.id", "whatsapp.com", "wa.me",
     ".go.id",  # any Indonesian government domain
@@ -100,7 +100,8 @@ def _share_code_request(text: str) -> bool:
 def _lookalike_domain(text: str) -> str | None:
     for m in DOMAIN.finditer(text):
         domain = m.group(1).lower()
-        if domain.endswith(OFFICIAL_SUFFIXES):
+        # match whole labels only: "hadiah-bca.co.id" must not pass as "bca.co.id"
+        if any(domain == s.lstrip(".") or domain.endswith("." + s.lstrip(".")) for s in OFFICIAL_SUFFIXES):
             continue
         tokens = set(re.split(r"[.-]", domain))
         if tokens & BRANDS:
