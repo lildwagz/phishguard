@@ -1,39 +1,39 @@
 {
   "model": "tfidf_logreg",
-  "version": "20261112",
-  "trained_at": "2026-11-12T11:22:05+00:00",
+  "version": "20261117",
+  "trained_at": "2026-11-17T00:30:04+00:00",
   "cv_f1_phishing_train": {
-    "tfidf_naive_bayes": 0.8371,
-    "tfidf_logreg": 0.9227
+    "tfidf_naive_bayes": 0.8276,
+    "tfidf_logreg": 0.8978
   },
   "test_overall": {
-    "n": 1413,
-    "accuracy": 0.9781,
-    "precision_phishing": 0.9231,
-    "recall_phishing": 0.9184,
-    "f1_phishing": 0.9207,
+    "n": 1474,
+    "accuracy": 0.9722,
+    "precision_phishing": 0.9213,
+    "recall_phishing": 0.8924,
+    "f1_phishing": 0.9066,
     "confusion_matrix [[aman->aman, aman->phish], [phish->aman, phish->phish]]": [
       [
-        1202,
-        15
+        1234,
+        17
       ],
       [
-        16,
-        180
+        24,
+        199
       ]
     ]
   },
   "test_by_lang": {
     "en": {
       "n": 1160,
-      "accuracy": 0.9819,
-      "precision_phishing": 0.8972,
+      "accuracy": 0.981,
+      "precision_phishing": 0.8889,
       "recall_phishing": 0.9057,
-      "f1_phishing": 0.9014,
+      "f1_phishing": 0.8972,
       "confusion_matrix [[aman->aman, aman->phish], [phish->aman, phish->phish]]": [
         [
-          1043,
-          11
+          1042,
+          12
         ],
         [
           10,
@@ -42,19 +42,19 @@
       ]
     },
     "id": {
-      "n": 253,
-      "accuracy": 0.9605,
-      "precision_phishing": 0.9545,
-      "recall_phishing": 0.9333,
-      "f1_phishing": 0.9438,
+      "n": 314,
+      "accuracy": 0.9395,
+      "precision_phishing": 0.9537,
+      "recall_phishing": 0.8803,
+      "f1_phishing": 0.9156,
       "confusion_matrix [[aman->aman, aman->phish], [phish->aman, phish->phish]]": [
         [
-          159,
-          4
+          192,
+          5
         ],
         [
-          6,
-          84
+          14,
+          103
         ]
       ]
     }
@@ -79,31 +79,48 @@
     },
     "curated_2022plus": {
       "n": 16,
-      "accuracy": 0.9375,
+      "accuracy": 0.875,
       "precision_phishing": 1.0,
-      "recall_phishing": 0.9286,
-      "f1_phishing": 0.963,
+      "recall_phishing": 0.8571,
+      "f1_phishing": 0.9231,
       "confusion_matrix [[aman->aman, aman->phish], [phish->aman, phish->phish]]": [
         [
           2,
           0
         ],
         [
-          1,
-          13
+          2,
+          12
+        ]
+      ]
+    },
+    "kelompok": {
+      "n": 61,
+      "accuracy": 0.8689,
+      "precision_phishing": 0.9524,
+      "recall_phishing": 0.7407,
+      "f1_phishing": 0.8333,
+      "confusion_matrix [[aman->aman, aman->phish], [phish->aman, phish->phish]]": [
+        [
+          33,
+          1
+        ],
+        [
+          7,
+          20
         ]
       ]
     },
     "mendeley_smishing": {
       "n": 1160,
-      "accuracy": 0.9819,
-      "precision_phishing": 0.8972,
+      "accuracy": 0.981,
+      "precision_phishing": 0.8889,
       "recall_phishing": 0.9057,
-      "f1_phishing": 0.9014,
+      "f1_phishing": 0.8972,
       "confusion_matrix [[aman->aman, aman->phish], [phish->aman, phish->phish]]": [
         [
-          1043,
-          11
+          1042,
+          12
         ],
         [
           10,
@@ -129,8 +146,8 @@
       ]
     }
   },
-  "baseline_always_aman_accuracy": 0.8613,
-  "avg_predict_ms_per_message": 0.142,
+  "baseline_always_aman_accuracy": 0.8487,
+  "avg_predict_ms_per_message": 0.128,
   "nfr03": {
     "target": "accuracy >= 0.85 and f1_phishing >= 0.85 on test set",
     "accuracy_ok": true,
@@ -139,21 +156,23 @@
   },
   "challenge_id": {
     "n": 9,
-    "accuracy": 1.0,
+    "accuracy": 0.8889,
     "precision_phishing": 1.0,
-    "recall_phishing": 1.0,
-    "f1_phishing": 1.0,
+    "recall_phishing": 0.8,
+    "f1_phishing": 0.8889,
     "confusion_matrix [[aman->aman, aman->phish], [phish->aman, phish->phish]]": [
       [
         4,
         0
       ],
       [
-        0,
-        5
+        1,
+        4
       ]
     ],
-    "missed_phishing": [],
+    "missed_phishing": [
+      "modus kurir palsu"
+    ],
     "false_alarm_aman": []
   },
   "challenge_id_v2": {
@@ -173,7 +192,7 @@
       ]
     ],
     "missed_phishing": [
-      "kurir APK",
+      "tarif bank",
       "lowongan part-time",
       "foto paket APK"
     ],
@@ -183,78 +202,78 @@
   },
   "judol_detector": {
     "threshold": 0.5,
-    "train_rows": 8743,
+    "train_rows": 8983,
     "train_positive": 1199,
     "test_judol_source": {
       "n": 772,
-      "accuracy": 0.965,
-      "precision_phishing": 0.9756,
-      "recall_phishing": 0.9333,
-      "f1_phishing": 0.954,
+      "accuracy": 0.9598,
+      "precision_phishing": 0.9753,
+      "recall_phishing": 0.92,
+      "f1_phishing": 0.9468,
       "confusion_matrix [[aman->aman, aman->phish], [phish->aman, phish->phish]]": [
         [
           465,
           7
         ],
         [
-          20,
-          280
+          24,
+          276
         ]
       ]
     },
     "false_alarms_on_all_legit_sms (train+test)": 0,
-    "legit_sms_checked": 6089
+    "legit_sms_checked": 6257
   },
   "system_main_or_judol": {
     "test_sms (same messages as test_overall)": {
-      "n": 1413,
-      "accuracy": 0.9781,
-      "precision_phishing": 0.9231,
-      "recall_phishing": 0.9184,
-      "f1_phishing": 0.9207,
+      "n": 1474,
+      "accuracy": 0.9722,
+      "precision_phishing": 0.9213,
+      "recall_phishing": 0.8924,
+      "f1_phishing": 0.9066,
       "confusion_matrix [[aman->aman, aman->phish], [phish->aman, phish->phish]]": [
         [
-          1202,
-          15
+          1234,
+          17
         ],
         [
-          16,
-          180
+          24,
+          199
         ]
       ]
     },
     "test_judol_social_posts": {
       "n": 772,
-      "accuracy": 0.7772,
-      "precision_phishing": 0.6481,
-      "recall_phishing": 0.9333,
-      "f1_phishing": 0.765,
+      "accuracy": 0.7396,
+      "precision_phishing": 0.6083,
+      "recall_phishing": 0.9267,
+      "f1_phishing": 0.7345,
       "confusion_matrix [[aman->aman, aman->phish], [phish->aman, phish->phish]]": [
         [
-          320,
-          152
+          293,
+          179
         ],
         [
-          20,
-          280
+          22,
+          278
         ]
       ]
     },
     "note": "judol_social_posts are Facebook/TikTok/X captions; most false alarms there come from the main SMS model",
     "challenge_id": {
       "n": 9,
-      "accuracy": 1.0,
+      "accuracy": 0.8889,
       "precision_phishing": 1.0,
-      "recall_phishing": 1.0,
-      "f1_phishing": 1.0,
+      "recall_phishing": 0.8,
+      "f1_phishing": 0.8889,
       "confusion_matrix [[aman->aman, aman->phish], [phish->aman, phish->phish]]": [
         [
           4,
           0
         ],
         [
-          0,
-          5
+          1,
+          4
         ]
       ]
     },

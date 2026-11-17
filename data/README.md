@@ -10,7 +10,7 @@
 | `raw/indo/rahmi2016/dataset_sms_spam_v1.csv` — Rahmi & Wibisono (2016) | ID | 0 normal, 2 promo → **aman** · 1 penipuan → **phishing** | CC BY-SA 4.0 |
 | `raw/indo/bopbi/` — bopbi/indonesia-sms-spam-dataset (SMS asli, 2021) | ID | prize, loan, non-provider-promo → **phishing** · premium-sms → **aman** · evil-service dibuang | CC0 1.0 |
 | `raw/indo/curated_2022plus/*.jsonl` — teks SMS/WA/posting penipuan **dikutip verbatim** dari berita & peringatan resmi 2022–2026 (kompas, liputan6, detik, tirto, turnbackhoax, bca.co.id, dll.) | ID | sudah berlabel; tiap baris punya `source_url` | kutipan untuk keperluan akademik, sumber dicantumkan per baris |
-| `raw/indo/kelompok/*.csv` — SMS asli dari anggota kelompok (belum ada isinya) | ID | `text,label,modus` | data sendiri |
+| `raw/indo/kelompok/*.csv` — SMS dari anggota kelompok (`Intensifies.csv`, PR #12, 2026-11-17) | ID + EN | `text,label,modus`, label `phishing`/`aman` | data sendiri |
 | `raw/indo/judol_0xrafie/dataset.csv` — Ekaputra (2026), caption Facebook/TikTok/X, anotasi manual (ITS) | ID | 1.0 promosi judi online → **phishing** · 0.0 bukan → **aman** | CC BY 4.0 (file mentah tidak di repo, lihat `SOURCE.md`) |
 
 Catatan `curated_2022plus` (dikumpulkan 2026-11-12 oleh 4 agent riset paralel, lalu saya periksa):
@@ -27,7 +27,13 @@ Hasil: 3.861 baris unik (1.499 judol, 2.362 bukan judol). Data ini **tidak** dip
 smishing Indonesia: challenge v1 9/9 → 5/9), tetapi melatih **detektor judol** terpisah di bundle model yang sama.
 Split sumber ini memakai RNG sendiri, sehingga train/test sumber lama tetap identik (5.654/1.413, sudah diverifikasi).
 
-**Hasil (`processed/`)**: 10.928 baris unik sejak 2026-11-12 (7.067 SMS + 3.861 judol). Sebelum data judol: 7.067 pesan unik (34 teks duplikat dengan label bertentangan dibuang), split stratified 80/20 per (label, sumber), seed 42.
+Catatan `kelompok` (lihat `plans/2026-11-17-merge-data-kelompok.md`): 337 baris dari peran Data dan Model. Baris 1–102 SMS Indonesia 2025–2026
+dari HP (50 phishing: judol, hadiah palsu, pinjol, lowongan; 52 aman: operator, BMKG, Kemkomdigi, promo toko). Baris berikutnya SMS Nigeria berbahasa Inggris
+(asal tidak dicatat), ikut tercatat `lang=id`. Nomor telepon yang terlewat disamarkan otomatis jadi `08XXXXXXXXXX`. Setelah dedup 301 baris (168 aman, 133 phishing).
+Split sumber ini juga memakai RNG sendiri, sehingga test set sumber lama tetap 1.413 pesan yang sama.
+
+**Hasil (`processed/`)**: 11.229 baris unik sejak 2026-11-17 (7.067 SMS lama + 301 kelompok + 3.861 judol); test SMS 1.474 pesan (1.413 lama + 61 kelompok).
+Sebelumnya 10.928 baris (7.067 SMS + 3.861 judol). Sebelum data judol: 7.067 pesan unik (34 teks duplikat dengan label bertentangan dibuang), split stratified 80/20 per (label, sumber), seed 42.
 
 _Tabel di bawah = versi pertama (sebelum data 2021+ ditambah); angka terbaru per sumber ada di output `prepare_dataset.py`._
 

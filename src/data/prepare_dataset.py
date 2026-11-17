@@ -100,7 +100,8 @@ def kelompok():
         if f.name == "template.csv":
             continue
         for r in read_rows(f):
-            yield r["text"], r["label"].strip().lower(), "id", "kelompok"
+            # members mask numbers by hand; anything missed is masked here so it never reaches data/processed
+            yield PHONE.sub("08XXXXXXXXXX", r["text"]), r["label"].strip().lower(), "id", "kelompok"
 
 
 def norm(text):

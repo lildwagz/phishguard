@@ -8,12 +8,12 @@ Aplikasi deteksi SMS/Email phishing. Mata kuliah PBL (Project-Based Learning): k
 - [x] Checkpoint Minggu 1 (bobot RPS 5%) sudah dibuat: `docs/Checkpoint1_PhishGuard_RancanganAwal.docx` (2 halaman) — berisi masalah/pengguna/tujuan, input-output, 3 kebutuhan fungsional, 3 kebutuhan nonfungsional terukur, diagram 5 komponen, mockup Flutter awal.
 - [ ] **Belum diisi**: nomor/nama kelompok, kode kelas, nama+NIM anggota tim — isi manual di docx di atas (sengaja dikosongkan, bukan data milik asisten).
 - [x] Dataset siap (2026-11-12): `data/processed/` — 6.939 SMS (EN Mendeley smishing + ID Rahmi & Wibisono), phishing ~12%, split train/test 80/20. Detail, lisensi & sitasi: `data/README.md`; rencana: `plans/2026-11-12-dataset.md`.
-- [x] Model (2026-11-12, retrain #2 dengan data ID 2021+): TF-IDF (kata + karakter) + Logistic Regression → `model/phishguard.joblib`. Test: **akurasi 97,8%**, F1 phishing 0,921 (EN 0,901 · ID 0,944). Detail: `model/metrics.json`.
+- [x] Model (2026-11-17, retrain #3 dengan data SMS kelompok, PR #12): TF-IDF (kata + karakter) + Logistic Regression → `model/phishguard.joblib` (`tfidf_logreg-20261117`). Test 1.474 pesan: **akurasi 97,2%**, F1 phishing 0,907 (EN 0,897 · ID 0,916; data kelompok 0,833, sebelumnya 0,19). Pada 1.413 pesan uji lama F1 0,916 (sebelumnya 0,921). Detail: `model/metrics.json`, `plans/2026-11-17-merge-data-kelompok.md`.
 - [x] REST API FastAPI (`api/`): `GET /health`, `POST /v1/predict`. 58 tes pytest lulus (termasuk aturan, judol, keamanan, endpoint async & request ID) (FR-01, FR-02, NFR-02 teks tidak di-log, NFR-01 latency). Latency HTTP di Docker p95 ≈ 6 ms.
 - [x] Lapisan aturan (`api/app/rules.py`): .apk, minta kode OTP, kerja dibayar per like/tugas, domain tiruan brand, situs/promo judi online (2026-11-12). 0 false alarm di 6.089 pesan aman; challenge v2 8/12 → 11/12 (optimis, lihat `plans/2026-11-12-lapisan-aturan.md`). Respon API punya `reasons`, ditampilkan di app.
 - [x] Docker: `docker compose up -d --build` → API :8000 + web UI :8080.
 - [x] Aplikasi Flutter (`mobile/`): input, validasi kosong, kartu hasil + confidence, riwayat lokal, pengaturan URL server. `flutter analyze` bersih, 9 widget test lulus, diuji end-to-end di Chrome.
-- [~] Modus penipuan ID terbaru: ditambah 69 teks penipuan 2022+ (kutipan berita) + bopbi 2021. Challenge v1 1/5 → 5/5; challenge **v2 (unseen) 8/12** — masih lolos kurir/foto-paket APK & lowongan part-time, 1 false alarm notifikasi BCA asli. Perlu SMS asli dari anggota kelompok → `data/raw/indo/kelompok/`. Detail: `plans/2026-11-12-data-indonesia-terbaru.md`.
+- [~] Modus penipuan ID terbaru: ditambah 69 teks penipuan 2022+ (kutipan berita) + bopbi 2021. Challenge v1 1/5 → 5/5; challenge **v2 (unseen) 8/12** — masih lolos kurir/foto-paket APK & lowongan part-time, 1 false alarm notifikasi BCA asli. 2026-11-17: 301 SMS kelompok masuk (issue #1 selesai); challenge v1 lewat model saja 8/9, lewat API (model + aturan) v1+v2 tetap 20/21. Detail: `plans/2026-11-12-data-indonesia-terbaru.md`.
 - [x] APK Android (2026-11-12): `cd mobile && flutter build apk --release` → `build/app/outputs/flutter-apk/app-release.apk`. Diuji di emulator Android 36.
 - [x] Fitur **"Scan dengan PhishGuard"** di menu seleksi teks app mana pun (`ACTION_PROCESS_TEXT`, tanpa izin sensitif) — popup hasil + alasan. Lihat `plans/2026-11-12-fitur-scan-text-selection.md`.
 - [x] **"Bagikan" ke PhishGuard** (`ACTION_SEND text/plain`) untuk SMS/WhatsApp yang teksnya tidak bisa diblok — popup yang sama (2026-11-12), **diuji di HP Android asli: berhasil**. Lihat `plans/2026-11-12-fitur-share-ke-phishguard.md`.
@@ -53,7 +53,7 @@ Lihat `mockups/arsitektur.png` dan `mockups/mockup_flutter.png` untuk visualnya.
 **Nonfungsional (terukur):**
 - NFR-01: latency prediksi ≤ 3 detik (p95)
 - NFR-02: isi pesan tidak disimpan permanen di server (privasi)
-- NFR-03 (direvisi 2026-11-12): pada data uji, **akurasi ≥ 85% dan F1 kelas phishing ≥ 0,85**. Akurasi saja tidak cukup karena data tidak seimbang (phishing ±12%, model yang selalu menjawab "aman" sudah dapat ±88%). F1 menggabungkan precision (berapa banyak peringatan yang benar) dan recall (berapa banyak penipuan yang tertangkap). Saat ini: akurasi 0,978 · F1 0,921 ✅ — dicek otomatis di `model/metrics.json` (`nfr03`).
+- NFR-03 (direvisi 2026-11-12): pada data uji, **akurasi ≥ 85% dan F1 kelas phishing ≥ 0,85**. Akurasi saja tidak cukup karena data tidak seimbang (phishing ±12%, model yang selalu menjawab "aman" sudah dapat ±88%). F1 menggabungkan precision (berapa banyak peringatan yang benar) dan recall (berapa banyak penipuan yang tertangkap). Saat ini: akurasi 0,972 · F1 0,907 ✅ — dicek otomatis di `model/metrics.json` (`nfr03`).
 
 ## Struktur folder
 
@@ -95,7 +95,7 @@ Android: build APK dulu **tanpa** emulator menyala (RAM 7 GB → OOM), lalu `~/A
 
 ## Langkah selanjutnya (belum dikerjakan)
 
-1. **Minta anggota kelompok menulis challenge v3** (±20 pesan, tanpa melihat aturan/model) untuk evaluasi yang adil, dan **kumpulkan SMS/WA asli** (penipuan + notifikasi resmi bank/kurir/OTP, ±100 pesan) ke `data/raw/indo/kelompok/` (lihat README di sana), lalu latih ulang dan cek `data/challenge/challenge_id_v2.csv`.
+1. **Minta anggota kelompok menulis challenge v3** (±20 pesan, tanpa melihat aturan/model) untuk evaluasi yang adil, dan tambah SMS/WA asli ke `data/raw/indo/kelompok/` (101 SMS Indonesia masuk 2026-11-17; notifikasi resmi bank/kurir/OTP masih sedikit), lalu latih ulang dan cek `data/challenge/challenge_id_v2.csv`.
 2. ~~Uji APK di HP sungguhan~~ — sudah (2026-11-12), termasuk menu Bagikan dari SMS.
 3. ~~Revisi NFR-03~~ — selesai (akurasi ≥ 85% **dan** F1 phishing ≥ 0,85). Kalau Checkpoint/Proposal sudah dikumpulkan dengan NFR-03 lama, sebutkan revisi ini di Proposal/Laporan.
 4. Isi Proposal (`docs/Template_Proposal_…docx`, BAB I–V) — metrik, sitasi dataset, dan arsitektur sudah tersedia.
