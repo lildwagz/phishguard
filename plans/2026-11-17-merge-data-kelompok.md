@@ -1,6 +1,6 @@
 # Plan: Merge data kelompok (PR #12, issue #1) dan retrain
 
-Tanggal: 2026-11-17 · Status: **selesai (kode, model, deploy); laporan menyusul**
+Tanggal: 2026-11-17 · Status: **selesai; laporan di Drive belum diganti (unggah manual)**
 Permintaan user: "oke jalankan" (perbaiki split, merge PR #12, retrain + tes + rebuild API, perbarui laporan dan README).
 
 ## Latar
@@ -34,3 +34,5 @@ Permintaan user: "oke jalankan" (perbaiki split, merge PR #12, retrain + tes + r
   Saat diperiksa, pencocokan domain resmi memakai `endswith` tanpa batas titik, sehingga `hadiah-bca.co.id` juga lolos sebagai resmi (celah).
   TDD: 2 tes baru gagal dulu, lalu `shopeepay.co.id` ditambahkan dan pencocokan dibatasi per label domain. 60 pytest lulus;
   0 false alarm aturan pada 6.257 SMS aman + 2.362 posting bukan judol; live: `hadiah-bca.co.id` → phishing dengan alasan domain, promo ShopeePay → aman.
+- Laporan (lokal, 49 hlm): versi model, ringkasan, 2.2 (sumber data kelompok, 7.368 SMS, split), 2.3, 2.4, 4.1, 5.1, T-04, 5.2, 5.5 (metrik baru + dampak data kelompok + XAI), 5.6 (tiga temuan), 7.1–7.3.
+  Unggah ke Drive gagal: konektor menolak referensi file kali ini, jadi file perlu diganti manual di folder Drive.
