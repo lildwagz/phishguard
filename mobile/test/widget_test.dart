@@ -92,4 +92,17 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining('Terlalu banyak permintaan'), findsOneWidget);
   });
+
+  testWidgets('versi web menampilkan tombol unduh APK', (tester) async {
+    await tester.pumpWidget(PhishGuardApp(apiFactory: fakeApi((_) => ok('aman', 0.9)), showApkDownload: true));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('apkDownload')), findsOneWidget);
+    expect(find.textContaining('Unduh aplikasi Android'), findsOneWidget);
+  });
+
+  testWidgets('aplikasi Android tidak menampilkan tombol unduh APK', (tester) async {
+    await tester.pumpWidget(PhishGuardApp(apiFactory: fakeApi((_) => ok('aman', 0.9)), showApkDownload: false));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('apkDownload')), findsNothing);
+  });
 }

@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'api.dart';
 import 'history.dart';
@@ -15,8 +17,9 @@ void scanMain() => runApp(const ScanApp());
 class PhishGuardApp extends StatelessWidget {
   final HistoryStore? store;
   final PhishGuardApi Function(String baseUrl)? apiFactory;
+  final bool showApkDownload; // web only: the Android app itself does not need a download link
 
-  const PhishGuardApp({super.key, this.store, this.apiFactory});
+  const PhishGuardApp({super.key, this.store, this.apiFactory, this.showApkDownload = kIsWeb});
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +27,8 @@ class PhishGuardApp extends StatelessWidget {
       title: 'PhishGuard',
       debugShowCheckedModeBanner: false,
       theme: phishGuardTheme(),
-      home: HomePage(store: store ?? HistoryStore(), apiFactory: apiFactory ?? PhishGuardApi.new),
+      home: HomePage(
+          store: store ?? HistoryStore(), apiFactory: apiFactory ?? PhishGuardApi.new, showApkDownload: showApkDownload),
     );
   }
 }
@@ -32,8 +36,9 @@ class PhishGuardApp extends StatelessWidget {
 class HomePage extends StatefulWidget {
   final HistoryStore store;
   final PhishGuardApi Function(String baseUrl) apiFactory;
+  final bool showApkDownload;
 
-  const HomePage({super.key, required this.store, required this.apiFactory});
+  const HomePage({super.key, required this.store, required this.apiFactory, this.showApkDownload = false});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -216,6 +221,23 @@ class _HomePageState extends State<HomePage> {
                   ),
                 for (final h in _history) HistoryTile(entry: h),
                 const SizedBox(height: 16),
+                if (widget.showApkDownload) ...[
+                  OutlinedButton.icon(
+                    key: const Key('apkDownload'),
+                    // served by nginx next to the web app (mobile/nginx.conf, mobile/Dockerfile.web)
+                    onPressed: () => launchUrl(Uri.base.resolve('download/PhishGuard.apk')),
+                    icon: const Icon(Icons.android),
+                    label: const Text('Unduh aplikasi Android (APK)'),
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.only(top: 4, bottom: 12),
+                    child: Text(
+                        'Untuk Android 7 ke atas. Saat memasang, izinkan "instal dari sumber tidak dikenal". '
+                        'Aplikasi Android bisa memeriksa pesan langsung dari menu Bagikan di SMS dan WhatsApp.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.black54, fontSize: 12)),
+                  ),
+                ],
                 Text('Server: $_baseUrl',
                     textAlign: TextAlign.center, style: const TextStyle(color: Colors.black45, fontSize: 12)),
               ],

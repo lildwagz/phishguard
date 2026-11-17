@@ -3,13 +3,18 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 
+/// Android default, set at build time for an APK meant for other phones:
+/// `flutter build apk --dart-define=API_BASE_URL=https://phishguard.taile0ea7c.ts.net`.
+/// Without it the emulator address is used (development).
+const androidApiDefault = String.fromEnvironment('API_BASE_URL', defaultValue: 'http://10.0.2.2:8000');
+
 /// Default API address.
-/// - Android: the emulator reaches the host machine through 10.0.2.2.
+/// - Android: [androidDefault] (the emulator reaches the host machine through 10.0.2.2).
 /// - Web served by the `web` container (nginx proxies /v1/ to the API), locally on
 ///   :8080 or publicly via Tailscale Funnel: same origin as the page.
 /// - Web from `flutter run` (localhost on a random dev port): the API on :8000.
-String baseUrlFor({required bool isWeb, Uri? page}) {
-  if (!isWeb) return 'http://10.0.2.2:8000';
+String baseUrlFor({required bool isWeb, Uri? page, String androidDefault = androidApiDefault}) {
+  if (!isWeb) return androidDefault;
   if (page == null || (page.scheme != 'http' && page.scheme != 'https')) {
     return 'http://localhost:8000';
   }

@@ -7,6 +7,11 @@ void main() {
       expect(baseUrlFor(isWeb: false, page: null), 'http://10.0.2.2:8000');
     });
 
+    test('Android memakai alamat dari --dart-define API_BASE_URL bila diisi (APK untuk dibagikan)', () {
+      expect(baseUrlFor(isWeb: false, page: null, androidDefault: 'https://phishguard.example.ts.net'),
+          'https://phishguard.example.ts.net');
+    });
+
     test('web lewat Funnel memakai origin halaman (satu origin dengan nginx)', () {
       expect(baseUrlFor(isWeb: true, page: Uri.parse('https://zam.taile0ea7c.ts.net/')),
           'https://zam.taile0ea7c.ts.net');

@@ -4,3 +4,4 @@
 !model/phishguard.joblib
 !mobile/build/web
 !mobile/nginx.conf
+!mobile/build/app/outputs/flutter-apk/app-release.apk
