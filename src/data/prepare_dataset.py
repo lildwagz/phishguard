@@ -19,7 +19,7 @@ SEED = 42
 TEST_FRAC = 0.2
 # Sources added after the first split get their own RNG, so the train/test membership of the older
 # sources stays exactly the same and old vs new models can be compared on the same test messages.
-OWN_RNG_SOURCES = {"judol_0xrafie"}
+OWN_RNG_SOURCES = {"judol_0xrafie", "kelompok"}
 # Personal data: Indonesian mobile numbers (also "+62 878-..." with a separator after 62), WhatsApp links with
 # any country code (wa.me/60..., wa.me/855...), and personal Facebook profile IDs.
 PHONE = re.compile(r"(?:\+?62[\s.-]?|\b0)8\d[\d\s.-]{7,}|wa\.me/\+?\d{6,}|profile\.php\?id=\d+")
