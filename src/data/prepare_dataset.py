@@ -41,14 +41,12 @@ def mendeley():
     # ham -> aman, smishing -> phishing, spam (promo/marketing) -> aman: we only flag fraud.
     mapping = {"ham": "aman", "spam": "aman", "smishing": "phishing"}
     for r in read_rows(RAW / "mendeley_smishing" / "Dataset_5971.csv"):
-        yield r["TEXT"], mapping[r["LABEL"].strip().lower()], "en", "mendeley_smishing"
-
-
+        yield r["TEXT"], mapping[r["LABEL"].strip().lower()], "en", "mendeley_smishing", ""
 def rahmi():
     # 0 normal -> aman, 1 penipuan -> phishing, 2 promo -> aman
     mapping = {"0": "aman", "1": "phishing", "2": "aman"}
     for r in read_rows(RAW / "indo" / "rahmi2016" / "dataset_sms_spam_v1.csv"):
-        yield r["Teks"], mapping[r["label"].strip()], "id", "rahmi2016"
+        yield r["Teks"], mapping[r["label"].strip()], "id", "rahmi2016", ""
 
 
 def bopbi():
@@ -58,7 +56,7 @@ def bopbi():
     mapping = {"prize": "phishing", "loan": "phishing", "non-provider-promo": "phishing", "premium-sms": "aman"}
     for folder, label in mapping.items():
         for f in sorted((RAW / "indo" / "bopbi" / folder).glob("*.txt")):
-            yield f.read_text(encoding="utf-8", errors="replace"), label, "id", "bopbi2021"
+            yield f.read_text(encoding="utf-8", errors="replace"), label, "id", "bopbi2021", ""
 
 
 def curated():
@@ -70,7 +68,7 @@ def curated():
                 r = json.loads(line)
                 # WhatsApp Business templates use {{1}}/{{ID}} placeholders -> fill with a realistic value
                 text = re.sub(r"\{\{[^}]*\}\}", "482913", r["text"])
-                yield text, r["label"], "id", "curated_2022plus"
+                yield text, r["label"], "id", "curated_2022plus", ""
 
 
 def judol():
@@ -91,7 +89,7 @@ def judol():
                 or len(re.findall(r"[A-Za-z]{2,}", re.sub(r"https?://\S+|[#@]\w+", "", text))) < 3):
             continue
         text = re.sub(r"@\w+", "@user", text)
-        yield text, {"1.0": "phishing", "0.0": "aman"}[r["label"].strip()], "id", "judol_0xrafie"
+        yield text, {"1.0": "phishing", "0.0": "aman"}[r["label"].strip()], "id", "judol_0xrafie", ""
 
 
 def kelompok():
@@ -101,7 +99,7 @@ def kelompok():
             continue
         for r in read_rows(f):
             # members mask numbers by hand; anything missed is masked here so it never reaches data/processed
-            yield PHONE.sub("08XXXXXXXXXX", r["text"]), r["label"].strip().lower(), "id", "kelompok"
+            yield PHONE.sub("08XXXXXXXXXX", r["text"]), r["label"].strip().lower(), "id", "kelompok", r["modus"]
 
 
 def norm(text):
@@ -111,7 +109,7 @@ def norm(text):
 
 def main():
     seen, rows, conflicts = {}, [], 0
-    for text, label, lang, source in [*mendeley(), *rahmi(), *bopbi(), *curated(), *judol(), *kelompok()]:
+    for text, label, lang, source, modus in [*mendeley(), *rahmi(), *bopbi(), *curated(), *judol(), *kelompok()]:
         text = norm(text)
         if not text:
             continue
@@ -121,7 +119,7 @@ def main():
                 seen[key]["label"] = None
                 conflicts += 1
             continue
-        seen[key] = row = {"text": text, "label": label, "lang": lang, "source": source}
+        seen[key] = row = {"text": text, "label": label, "lang": lang, "source": source, "modus": modus}
         rows.append(row)
     rows = [r for r in rows if r["label"]]
 
@@ -141,7 +139,7 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
     for name, data in [("phishguard_sms.csv", rows), ("train.csv", train), ("test.csv", test)]:
         with open(OUT / name, "w", newline="", encoding="utf-8") as f:
-            w = csv.DictWriter(f, fieldnames=["text", "label", "lang", "source"])
+            w = csv.DictWriter(f, fieldnames=["text", "label", "lang", "source", "modus"])
             w.writeheader()
             w.writerows(data)
 
