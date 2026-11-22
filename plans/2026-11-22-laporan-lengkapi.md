@@ -16,3 +16,10 @@ Permintaan user: "kalo laporan ada yg kurang?" lalu memberi kelas 10.5A.01, seme
 
 ## Masih placeholder
 Nomor/nama kelompok, tanggal, nama dosen, NIDN. Tag release v1.0.0 (#9) menunggu izin.
+
+## Lanjutan: rilis v1.0.0 (issue #9)
+- Uji ulang: 60 pytest, 17 tes Flutter, /health publik = tfidf_logreg-20261122, unduhan APK publik 200.
+- Tag `v1.0.0` di 632a8a0 + GitHub Release dengan `PhishGuard-1.0.0.apk` (sha256 61c58792...62c8f8, sama dengan APK di web; diunduh ulang dan dicek).
+- Laporan memuat tag dan URL rilis (RINGKASAN, 4.5, 6.1, lampiran A), 53 halaman, diunggah sebagai Laporan_PhishGuard.pdf/.docx.
+- Drive: docx 17 Nov dan unggahan sementara 22 Nov dipindah ke trash; PDF 17 Nov ditolak pemeriksa keamanan, perlu dihapus user.
+- Issue #9 ditutup.
