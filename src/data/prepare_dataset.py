@@ -1,8 +1,8 @@
 """Build the binary PhishGuard SMS dataset (phishing vs aman) from the raw public sources.
 
 Run from the project root:  python3 src/data/prepare_dataset.py
-Inputs  : data/raw/mendeley_smishing/, data/raw/indo/{rahmi2016,bopbi,curated_2022plus,judol_0xrafie}/
-Outputs : data/processed/phishguard_sms.csv, train.csv, test.csv  (columns: text,label,lang,source)
+Inputs  : data/raw/mendeley_smishing/, data/raw/indo/{rahmi2016,bopbi,curated_2022plus,judol_0xrafie,kelompok}/
+Outputs : data/processed/phishguard_sms.csv, train.csv, test.csv  (columns: text,label,lang,source,modus; modus only for kelompok)
 """
 import csv
 import json
@@ -42,6 +42,8 @@ def mendeley():
     mapping = {"ham": "aman", "spam": "aman", "smishing": "phishing"}
     for r in read_rows(RAW / "mendeley_smishing" / "Dataset_5971.csv"):
         yield r["TEXT"], mapping[r["LABEL"].strip().lower()], "en", "mendeley_smishing", ""
+
+
 def rahmi():
     # 0 normal -> aman, 1 penipuan -> phishing, 2 promo -> aman
     mapping = {"0": "aman", "1": "phishing", "2": "aman"}
@@ -99,7 +101,7 @@ def kelompok():
             continue
         for r in read_rows(f):
             # members mask numbers by hand; anything missed is masked here so it never reaches data/processed
-            yield PHONE.sub("08XXXXXXXXXX", r["text"]), r["label"].strip().lower(), "id", "kelompok", r["modus"]
+            yield PHONE.sub("08XXXXXXXXXX", r["text"]), r["label"].strip().lower(), "id", "kelompok", r["modus"].strip().lower()
 
 
 def norm(text):

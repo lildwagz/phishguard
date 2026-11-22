@@ -1,7 +1,7 @@
 {
   "model": "tfidf_logreg",
-  "version": "20261117",
-  "trained_at": "2026-11-17T00:30:04+00:00",
+  "version": "20261122",
+  "trained_at": "2026-11-22T02:17:01+00:00",
   "cv_f1_phishing_train": {
     "tfidf_naive_bayes": 0.8276,
     "tfidf_logreg": 0.8978
@@ -147,7 +147,7 @@
     }
   },
   "baseline_always_aman_accuracy": 0.8487,
-  "avg_predict_ms_per_message": 0.128,
+  "avg_predict_ms_per_message": 0.288,
   "nfr03": {
     "target": "accuracy >= 0.85 and f1_phishing >= 0.85 on test set",
     "accuracy_ok": true,
@@ -203,21 +203,21 @@
   "judol_detector": {
     "threshold": 0.5,
     "train_rows": 8983,
-    "train_positive": 1199,
+    "train_positive": 1223,
     "test_judol_source": {
       "n": 772,
-      "accuracy": 0.9598,
-      "precision_phishing": 0.9753,
-      "recall_phishing": 0.92,
-      "f1_phishing": 0.9468,
+      "accuracy": 0.9637,
+      "precision_phishing": 0.9755,
+      "recall_phishing": 0.93,
+      "f1_phishing": 0.9522,
       "confusion_matrix [[aman->aman, aman->phish], [phish->aman, phish->phish]]": [
         [
           465,
           7
         ],
         [
-          24,
-          276
+          21,
+          279
         ]
       ]
     },
@@ -244,18 +244,18 @@
     },
     "test_judol_social_posts": {
       "n": 772,
-      "accuracy": 0.7396,
-      "precision_phishing": 0.6083,
-      "recall_phishing": 0.9267,
-      "f1_phishing": 0.7345,
+      "accuracy": 0.7409,
+      "precision_phishing": 0.6092,
+      "recall_phishing": 0.93,
+      "f1_phishing": 0.7361,
       "confusion_matrix [[aman->aman, aman->phish], [phish->aman, phish->phish]]": [
         [
           293,
           179
         ],
         [
-          22,
-          278
+          21,
+          279
         ]
       ]
     },
