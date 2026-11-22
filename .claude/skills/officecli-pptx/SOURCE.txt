@@ -1,0 +1,1 @@
+source: https://github.com/iOfficeAI/OfficeCLI/tree/main/skills/officecli-pptx @ fecece3 (2026-11-22), Apache-2.0. Butuh officecli >= 1.0.163 (~/.local/bin/officecli).
