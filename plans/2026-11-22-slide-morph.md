@@ -7,7 +7,7 @@ Permintaan user: "coba kalo pake skill ppt morph" setelah v3 (academic-pptx) din
 - `officecli` 1.0.163 dipasang manual dari rilis GitHub (sha256 cocok dengan SHA256SUMS) ke `~/.local/bin`, tanpa install.sh
   (skrip itu mengubah .bashrc). Skill `morph-ppt` + dasarnya `officecli-pptx` dipasang di `.claude/skills/` (Apache-2.0, SOURCE.txt).
 - Gaya dipilih user dari 3 contoh: `dark--cyber-future` (latar 0B0C10, cyan 66FCF1, teal 45A29E). Font Arial (Montserrat tidak ada).
-- Isi = outline v3 yang sudah disetujui; slide 9 dan 10 v3 dipecah jadi dua keyframe (18 slide) agar morph bisa
+- Isi = outline v3 yang sudah disetujui; slide 9 dan 10 v3 dipecah jadi dua keyframe (21 slide) agar morph bisa
   menumbuhkan batang F1 (0,19 → 0,83) dan menyusutkan batang latency (2.000 → 20 ms).
 - Sumber: `docs/slide_src/morph/brief.md` (outline + tabel pasangan morph) dan `build.py` (docs/ tidak masuk repo).
 
