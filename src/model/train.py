@@ -64,8 +64,8 @@ def scores(y_true, y_pred):
 
 
 def main():
-    train_all = pd.read_csv(DATA / "train.csv")
-    test_all = pd.read_csv(DATA / "test.csv")
+    train_all = pd.read_csv(DATA / "train.csv", keep_default_na=False)
+    test_all = pd.read_csv(DATA / "test.csv", keep_default_na=False)
     is_judol_src = lambda df: df.source.isin(JUDOL_SOURCES)  # noqa: E731
     train, test = train_all[~is_judol_src(train_all)], test_all[~is_judol_src(test_all)]
 
@@ -115,7 +115,7 @@ def main():
         }
 
     # --- judol detector ---------------------------------------------------------------------------
-    target = lambda df: is_judol_src(df) & (df.label == POS)  # noqa: E731
+    target = lambda df: (is_judol_src(df) | (df.modus == "judi online")) & (df.label == POS)  # noqa: E731
     judol = Pipeline([("tfidf", features()),
                       ("clf", LogisticRegression(C=10, class_weight="balanced", max_iter=2000))])
     judol.fit(train_all.text, target(train_all))
